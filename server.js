@@ -18,6 +18,8 @@ const db = new sqlite3.Database('./accountability.db', (err) => {
     console.error('Error opening database:', err);
   } else {
     console.log('Connected to SQLite database');
+    // Enable foreign key constraints
+    db.run('PRAGMA foreign_keys = ON');
     initDatabase();
   }
 });
@@ -43,7 +45,7 @@ function initDatabase() {
       completed BOOLEAN DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       completed_at DATETIME,
-      FOREIGN KEY (goal_id) REFERENCES goals(id)
+      FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
     )
   `);
 
@@ -53,7 +55,7 @@ function initDatabase() {
       goal_id INTEGER,
       note TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (goal_id) REFERENCES goals(id)
+      FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
     )
   `);
 }
