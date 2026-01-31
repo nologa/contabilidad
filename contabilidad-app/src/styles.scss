@@ -1,0 +1,14 @@
+/* You can add global styles to this file, and also import other style files */
+
+// Variables globales
+$primary-blue: #6ec1ff;
+$primary-dark: #4fa3ff;
+$accent-soft: #e8f1fb;
+$card-border: #dfe7ef;
+$text-light: #f6f9fc;
+$list-bg: #f6f9fc;
+
+// Sobrescribe Bootstrap
+$primary: $primary-blue;
+
+// ...existing code...

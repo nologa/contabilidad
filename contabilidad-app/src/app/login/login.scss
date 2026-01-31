@@ -1,0 +1,50 @@
+@use '../../styles' as *;
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-title {
+  font-size: 4rem;
+  font-weight: 700;
+  color: $primary-blue;
+  text-align: center;
+  margin: 0 0 0.5rem 0; // antes: 0.25rem
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  border: 1px solid #dee2e6;   // borde visible
+  box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.08);
+  border-radius: 1rem;
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;      // título encima de la caja
+  justify-content: center;     // centrado vertical
+  align-items: center;         // centrado horizontal
+  padding: 0 1rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #dee2e6; // restaura borde estándar Bootstrap
+  box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.08);
+  margin-top: 0; // pegada al título
+
+  .card-body {
+    padding: 2.5rem;
+  }
+}
+
+// Elimina esta regla para que no añada margen extra a la card del login:
+// .card,
+// .login-box {
+//   margin-top: 0.5rem;
+// }

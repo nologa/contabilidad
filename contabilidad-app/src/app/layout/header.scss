@@ -1,0 +1,59 @@
+@use '../../styles' as *;
+
+.app-header {
+  background:  $primary-blue ;
+  padding: 1rem 0;
+}
+
+.app-header h1 {
+  font-size: 4rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.app-header .navbar-brand {
+  color: #fff !important;
+  font-weight: 700;
+  font-size: inherit;
+  white-space: normal;
+  word-break: break-word;
+  flex: 1 1 auto;
+}
+
+.app-header .nav-link {
+  color: #fff !important;
+  font-weight: 500;
+  margin: 0 0.5rem;
+  font-size: 1.3rem; 
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &.active {
+    color: #fff !important;
+    border-bottom: 2px solid #fff;
+  }
+}
+
+.app-header .btn-danger {
+  font-size: 1.3rem;
+  padding: 0.5rem 1rem;
+}
+
+.app-header .navbar-toggler {
+  margin-left: auto;
+  border-color: #fff;
+}
+
+.app-header .navbar-nav {
+  margin: 0;
+}
+
+@media (max-width: 576px) {
+  .app-header h1 {
+    font-size: 2.6rem;
+    line-height: 1.15;
+  }
+}

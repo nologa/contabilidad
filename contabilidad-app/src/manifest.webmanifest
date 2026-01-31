@@ -1,0 +1,17 @@
+{
+  "name": "Las cuentas de Agustín",
+  "short_name": "Contabilidad",
+  "theme_color": "#6ec1ff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "640x640",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

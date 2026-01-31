@@ -1,0 +1,55 @@
+<footer class="app-footer text-white text-center py-3 mt-5">
+  <p class="mb-0">
+    &copy; 2026 Noelia López | 
+    <a href="#" class="text-white-50" (click)="abrirPrivacy(); $event.preventDefault()">Privacidad</a> | 
+    <a href="#" class="text-white-50" (click)="abrirTerms(); $event.preventDefault()">Términos y condiciones </a>
+  </p>
+</footer>
+
+<!-- Modal Privacidad -->
+@if (showPrivacy) {
+  <div class="modal-overlay" (click)="cerrarPrivacy()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h5 class="modal-title">Política de Privacidad</h5>
+        <button type="button" class="btn-close" (click)="cerrarPrivacy()"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Privacidad de tus datos</strong></p>
+        <p>Esta aplicación es de uso interno y está alojada en internet. Tus datos contables se almacenan de forma segura y no se comparten con terceros.</p>
+        <p><strong>Seguridad</strong></p>
+        <p>Utilizamos autenticación por token para proteger tu información. Se recomienda cambiar la contraseña regularmente.</p>
+        <p><strong>Contacto</strong></p>
+        <p>Para consultas sobre privacidad, contacta directamente.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarPrivacy()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Términos -->
+@if (showTerms) {
+  <div class="modal-overlay" (click)="cerrarTerms()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h5 class="modal-title">Términos de Servicio</h5>
+        <button type="button" class="btn-close" (click)="cerrarTerms()"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Uso permitido</strong></p>
+        <p>Esta aplicación está diseñada para uso contable interno. Solo usuarios autorizados pueden acceder.</p>
+        <p><strong>Responsabilidad</strong></p>
+        <p>La aplicación se proporciona "tal cual". No se garantiza disponibilidad continua, aunque se hace lo posible por mantenerla.</p>
+        <p><strong>Cambios</strong></p>
+        <p>Nos reservamos el derecho de actualizar estas condiciones en cualquier momento.</p>
+        <p><strong>Contacto</strong></p>
+        <p>Para preguntas sobre estos términos, contacta directamente.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarTerms()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

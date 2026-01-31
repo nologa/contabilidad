@@ -1,0 +1,186 @@
+<div class="list-page card shadow-sm">
+  <div class="card-body">
+    @if (showSuccessModal) {
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>{{ successMessage }}</strong>
+      </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Servicios</h2>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" (click)="exportarPDF()" [disabled]="servicios.length === 0">Exportar PDF</button>
+        <button class="btn btn-primary" (click)="abrirNuevo()">Nuevo servicio</button>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-2 align-items-end flex-wrap">
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Desde</label>
+        <input type="date" class="form-control" [(ngModel)]="desde">
+      </div>
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Hasta</label>
+        <input type="date" class="form-control" [(ngModel)]="hasta">
+      </div>
+      <div class="col-12 col-md-auto d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-primary" (click)="setUltimoMes(); aplicarFiltro()">Últimos 30 días</button>
+        <button class="btn btn-outline-primary" (click)="verTodo()">Ver todo</button>
+        <button class="btn btn-primary" (click)="aplicarFiltro()">Buscar</button>
+      </div>
+      <div class="col-12 col-md-auto ms-md-auto d-flex gap-2 align-items-end">
+        <div>
+          <label class="form-label">Mostrar</label>
+          <select class="form-select" [(ngModel)]="limit" (change)="aplicarFiltro()">
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+        <button class="btn btn-outline-secondary" (click)="vistaTabla = !vistaTabla">
+          {{ vistaTabla ? '📋 Tarjetas' : '📊 Tabla' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="summary-top">
+      <span class="summary-pill">Total registros: {{ total }}</span>
+      <span class="summary-pill">Suma importes: {{ suma | number:'1.2-2' }} €</span>
+    </div>
+
+    @if (vistaTabla) {
+      <div class="page-container">
+        <div class="table-responsive">
+          <table class="table table-striped table-sm" *ngIf="servicios.length > 0">
+            <thead>
+              <tr>
+                <th class="text-center">Nº</th>
+                <th>
+                  <button class="btn btn-link btn-sort" (click)="cambiarOrden()">
+                    Fecha
+                    <span>{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
+                  </button>
+                </th>
+                <th>Código</th>
+                <th class="text-center">
+                  <span class="d-sm-none">€</span>
+                  <span class="d-none d-sm-inline">Importe €</span>
+                </th>
+                <th class="text-center">
+                  <span class="d-sm-none">%</span>
+                  <span class="d-none d-sm-inline">Descuento</span>
+                </th>
+                <th class="text-end">Total</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of servicios; let i = index">
+                <td class="text-center">{{ i + 1 }}</td>
+                <td>{{ s.fecha | date:'dd/MM/yy' }}</td>
+                <td>{{ s.codigo }}</td>
+                <td class="text-end">{{ s.importe | number:'1.2-2' }}</td>
+                <td class="text-end">{{ s.descuento | number:'1.0-2' }}</td>
+                <td class="text-end">{{ s.importeFinal | number:'1.2-2' }}</td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info" (click)="abrirDetalle(s)">Ver</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else {
+      <div>
+        @for (s of servicios; track s.codigo) {
+          <div class="card mb-2">
+            <div class="card-body">
+              <h6 class="card-title">{{ s.codigo }}</h6>
+              <p class="card-text mb-1"><strong>Fecha:</strong> {{ s.fecha | date:'dd/MM/yy' }}</p>
+              <p class="card-text mb-1"><strong>Importe:</strong> {{ s.importe | number:'1.2-2' }} €</p>
+              <p class="card-text mb-1"><strong>Descuento:</strong> {{ s.descuento | number:'1.0-2' }}%</p>
+              <p class="card-text mb-0"><strong>Final:</strong> {{ s.importeFinal | number:'1.2-2' }} €</p>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <p *ngIf="!loading && servicios.length === 0" class="alert alert-info">No hay servicios.</p>
+    <p *ngIf="loading" class="text-muted">Cargando...</p>
+
+    @if (total > limit) {
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <button class="btn btn-outline-primary" (click)="prev()" [disabled]="page === 0">Anterior</button>
+        <span>Página {{ page + 1 }}</span>
+        <button class="btn btn-outline-primary" (click)="next(total)" [disabled]="(page + 1) * limit >= total">Siguiente</button>
+      </div>
+    }
+
+    @if (servicioSeleccionado) {
+      <div class="modal-overlay" (click)="cerrarDetalle()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h5 class="modal-title">Detalle de Servicio</h5>
+            <button type="button" class="btn-close" (click)="cerrarDetalle()"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Código:</strong> {{ servicioSeleccionado.codigo }}</p>
+            <p><strong>Fecha:</strong> {{ servicioSeleccionado.fecha | date:'dd/MM/yy' }}</p>
+            <p><strong>Importe:</strong> {{ servicioSeleccionado.importe | number:'1.2-2' }} €</p>
+            <p><strong>Descuento:</strong> {{ servicioSeleccionado.descuento | number:'1.0-2' }}%</p>
+            <p><strong>Final:</strong> {{ servicioSeleccionado.importeFinal | number:'1.2-2' }} €</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" (click)="editarServicio(servicioSeleccionado)">Modificar</button>
+            <button class="btn btn-danger" (click)="borrarServicio(servicioSeleccionado.id)">Borrar</button>
+            <button class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (showFormModal) {
+      <div class="modal-overlay" (click)="cerrarForm()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ editingId ? 'Editar servicio' : 'Nuevo servicio' }}</h5>
+            <button type="button" class="btn-close" (click)="cerrarForm()"></button>
+          </div>
+          <div class="modal-body">
+            <form (ngSubmit)="guardarServicio()" #formServicio="ngForm">
+              <div class="mb-3">
+                <label class="form-label">Código *</label>
+                <input type="text" class="form-control" name="codigo" [(ngModel)]="servicio.codigo" required>
+                <small class="text-danger" *ngIf="servicio.codigo === ''">El código es obligatorio</small>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Fecha *</label>
+                <input type="date" class="form-control" name="fecha" [(ngModel)]="servicio.fecha" required>
+                <small class="text-danger" *ngIf="servicio.fecha === ''">La fecha es obligatoria</small>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Importe (€) *</label>
+                <input type="number" class="form-control" name="importe" [(ngModel)]="servicio.importe" (change)="calcularImporteFinal()" (input)="validarPrecioServicio($event, 'importe')" min="0.01" step="0.01" required>
+                <small class="text-danger" *ngIf="servicio.importe <= 0">El importe debe ser mayor que 0</small>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Descuento (%) *</label>
+                <input type="number" class="form-control" name="descuento" [(ngModel)]="servicio.descuento" (change)="calcularImporteFinal()" min="0" max="100" step="0.01" required>
+                <small class="text-danger" *ngIf="servicio.descuento < 0 || servicio.descuento > 100">El descuento debe estar entre 0 y 100</small>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Importe final (€)</label>
+                <input type="number" class="form-control" name="importeFinal" [(ngModel)]="servicio.importeFinal" disabled>
+              </div>
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" (click)="cerrarForm()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">{{ editingId ? 'Actualizar' : 'Guardar' }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

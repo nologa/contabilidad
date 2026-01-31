@@ -1,0 +1,121 @@
+<div class="list-page card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Facturas</h2>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" (click)="exportarPDF()" [disabled]="facturas.length === 0">Exportar PDF</button>
+        <button class="btn btn-primary" (click)="abrirNueva()">Nueva factura</button>
+      </div>
+    </div>
+
+    <div class="row g-2 align-items-end mb-2">
+      <div class="col-12 col-md-3">
+        <label class="form-label">Desde</label>
+        <input type="date" class="form-control" [(ngModel)]="desde">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label">Hasta</label>
+        <input type="date" class="form-control" [(ngModel)]="hasta">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Empresa</label>
+        <input type="text" class="form-control" [(ngModel)]="empresaFiltro" placeholder="Buscar empresa">
+      </div>
+      <div class="col-12 col-md-2 d-flex gap-2">
+        <button class="btn btn-outline-primary w-100" (click)="setUltimos30Dias()">Últimos 30 días</button>
+        <button class="btn btn-outline-primary w-100" (click)="limpiarFiltros()">Ver todo</button>
+        <button class="btn btn-primary w-100" (click)="aplicarFiltros()">Buscar</button>
+      </div>
+    </div>
+
+    <!-- Resumen entre filtros y tabla -->
+    <div class="summary-top">
+      <span class="summary-pill">Total registros: {{ total }}</span>
+      <span class="summary-pill">Suma importes: {{ suma | esNumber:2 }} €</span>
+    </div>
+
+    @if (showSuccessModal) {
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <strong>{{ successMessage }}</strong>
+        <hr>
+        <p>Código: {{ successData.codigo }}</p>
+        <p>Empresa: {{ successData.empresa }}</p>
+        <p>Total: {{ successData.total | esNumber:2 }}€</p>
+      </div>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger">{{ error }}</div>
+    }
+
+    <div class="page-container">
+      <div class="table-responsive">
+        <table class="table table-striped table-sm" *ngIf="facturas.length > 0">
+          <thead>
+            <tr>
+              <th class="text-center">Nº</th>
+              <th>
+                <button class="btn btn-link btn-sort" (click)="cambiarOrden('fecha')" [class.active]="sortBy === 'fecha'">
+                  Fecha
+                  <span *ngIf="sortBy === 'fecha'">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </button>
+              </th>
+              <th>Número de factura</th>
+              <th>
+                <button class="btn btn-link btn-sort" (click)="cambiarOrden('empresa')" [class.active]="sortBy === 'empresa'">
+                  Empresa
+                  <span *ngIf="sortBy === 'empresa'">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </button>
+              </th>
+              <th>CIF</th>
+              <th class="text-end">Total</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of facturas; let i = index">
+              <td class="text-center">{{ i + 1 }}</td>
+              <td>{{ f.fecha }}</td>
+              <td>{{ f.codigo }}</td>
+              <td>{{ f.empresa }}</td>
+              <td>{{ f.cif }}</td>
+              <td class="text-end">{{ f.total | esNumber:2 }} €</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-info" (click)="abrirDetalle(f)">Ver</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p *ngIf="!loading && facturas.length === 0" class="alert alert-info mb-0">No hay facturas.</p>
+        <p *ngIf="loading" class="text-muted mb-0">Cargando...</p>
+      </div>
+    </div>
+
+    @if (facturaSeleccionada) {
+      <div class="modal-overlay" (click)="cerrarDetalle()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h5 class="modal-title">Detalle de Factura</h5>
+            <button type="button" class="btn-close" (click)="cerrarDetalle()"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Número de factura:</strong> {{ facturaSeleccionada.codigo }}</p>
+            <p><strong>Fecha:</strong> {{ facturaSeleccionada.fecha }}</p>
+            <p><strong>Empresa:</strong> {{ facturaSeleccionada.empresa }}</p>
+            <p><strong>CIF:</strong> {{ facturaSeleccionada.cif }}</p>
+            <p><strong>Base Imponible:</strong> {{ facturaSeleccionada.baseImponible | esNumber:2 }}€</p>
+            <p><strong>IVA ({{ facturaSeleccionada.porcentajeIVA }}%):</strong> {{ facturaSeleccionada.valorIVA | esNumber:2 }}€</p>
+            <p><strong>Total:</strong> {{ facturaSeleccionada.total | esNumber:2 }}€</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" (click)="editarFactura(facturaSeleccionada)">Modificar</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

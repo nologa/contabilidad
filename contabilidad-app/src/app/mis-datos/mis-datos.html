@@ -1,0 +1,118 @@
+<div class="mis-datos-page card shadow-sm">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Mis Datos</h2>
+      <button class="btn btn-primary" (click)="activarEdicion()" *ngIf="!editando">Editar</button>
+    </div>
+
+    @if (mensaje) {
+      <div class="alert alert-success alert-dismissible fade show">
+        {{ mensaje }}
+      </div>
+    }
+
+    @if (error) {
+      <div class="alert alert-danger alert-dismissible fade show">
+        {{ error }}
+      </div>
+    }
+
+    @if (!cargando) {
+      <form (ngSubmit)="guardar()" *ngIf="editando">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nombre *</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.nombre" name="nombre" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">NIF *</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.nif" name="nif" required>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Razón Social</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.razonSocial" name="razonSocial">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="form-control" [(ngModel)]="datos.telefono" name="telefono">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" [(ngModel)]="datos.email" name="email">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-control" [(ngModel)]="datos.direccion" name="direccion">
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Código Postal</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.codigoPostal" name="codigoPostal">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Ciudad</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.ciudad" name="ciudad">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Provincia</label>
+            <input type="text" class="form-control" [(ngModel)]="datos.provincia" name="provincia">
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+
+      <div *ngIf="!editando" class="datos-view">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <p><strong>Nombre:</strong> {{ datos.nombre || '-' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <p><strong>NIF:</strong> {{ datos.nif || '-' }}</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <p><strong>Razón Social:</strong> {{ datos.razonSocial || '-' }}</p>
+          </div>
+          <div class="col-md-6 mb-3">
+            <p><strong>Teléfono:</strong> {{ datos.telefono || '-' }}</p>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <p><strong>Email:</strong> {{ datos.email || '-' }}</p>
+        </div>
+
+        <div class="mb-3">
+          <p><strong>Dirección:</strong> {{ datos.direccion || '-' }}</p>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <p><strong>Código Postal:</strong> {{ datos.codigoPostal || '-' }}</p>
+          </div>
+          <div class="col-md-4 mb-3">
+            <p><strong>Ciudad:</strong> {{ datos.ciudad || '-' }}</p>
+          </div>
+          <div class="col-md-4 mb-3">
+            <p><strong>Provincia:</strong> {{ datos.provincia || '-' }}</p>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <p class="text-muted">Cargando...</p>
+    }
+  </div>
+</div>
