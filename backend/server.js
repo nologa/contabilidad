@@ -289,7 +289,7 @@ app.post('/auth/reset-password', async (req, res) => {
     let resetToken, userId;
     if (DB_TYPE === 'postgres') {
       const result = await pgPool.query(
-        `SELECT * FROM resetTokens WHERE token = $1 AND used = 0 AND expiresAt > NOW()`,
+        `SELECT * FROM resetTokens WHERE token = $1 AND used = 0 AND expiresAt::timestamp > NOW()`,
         [token]
       );
       resetToken = result.rows[0];
