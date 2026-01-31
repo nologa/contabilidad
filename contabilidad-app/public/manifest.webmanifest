@@ -1,6 +1,6 @@
 {
-  "name": "contabilidad-app",
-  "short_name": "contabilidad-app",
+  "name": "Las cuentas de Agustín",
+  "short_name": "Las cuentas de Agustín",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

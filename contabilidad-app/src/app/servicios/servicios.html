@@ -80,7 +80,7 @@
                 <td>{{ s.fecha | date:'dd/MM/yy' }}</td>
                 <td>{{ s.codigo }}</td>
                 <td class="text-end">{{ s.importe | number:'1.2-2' }}</td>
-                <td class="text-end">{{ s.descuento | number:'1.0-2' }}</td>
+                <td class="text-end">{{ s.descuento | number:'1.0-2' }}%</td>
                 <td class="text-end">{{ s.importeFinal | number:'1.2-2' }}</td>
                 <td class="text-center">
                   <button class="btn btn-sm btn-info" (click)="abrirDetalle(s)">Ver</button>

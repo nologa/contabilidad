@@ -1,66 +1,168 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
 import { FacturasService } from '../services/facturas.service';
 import { EmpresasService, EmpresaDTO } from '../services/empresas.service';
-import { DatosPersonalesService, DatosPersonales } from '../services/datos-personales.service';
 import { Factura } from '../models/factura';
-import { EsNumberPipe } from '../pipes/es-number.pipe';
-import { NgZone } from '@angular/core';
-import { ChangeDetectorRef } from '@angular/core';
+import { DatosPersonalesService, DatosPersonales } from '../services/datos-personales.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-facturas',
   standalone: true,
-  imports: [CommonModule, FormsModule, EsNumberPipe],
-  templateUrl: './facturas.html',        
-  styleUrls: ['./facturas.scss']          
+  imports: [CommonModule, FormsModule],
+  templateUrl: './facturas.html',
+  styleUrls: ['./facturas.scss']
 })
 export class FacturasListaComponent implements OnInit {
-  limit = 50;
-  page = 0;
-  offset = 0;
-  desde = '';
-  hasta = '';
-  empresaFiltro = '';
+    facturaSeleccionada: Factura | null = null;
+    // Modal detalle
+    cerrarDetalle(): void {
+      this.facturaSeleccionada = null;
+    }
 
-  // Ordenamiento
+    editarFactura(f: Factura): void {
+      this.editingId = null; // Si tienes un id, pon f.id
+      this.factura = { ...f };
+      this.showFormModal = true;
+      this.cerrarDetalle();
+    }
+
+    borrarFactura(codigo: string): void {
+      // Implementa la lógica para borrar por código o id
+      // Ejemplo:
+      // this.facturasService.delete(codigo).subscribe(() => { ... })
+      this.cerrarDetalle();
+    }
+  filtroDesde: string = '';
+  filtroHasta: string = '';
+  filtroEmpresa: string = '';
   sortBy: 'fecha' | 'empresa' = 'fecha';
   sortOrder: 'asc' | 'desc' = 'desc';
-
   facturas: Factura[] = [];
-  total = 0;
-  suma = 0;
-
-  loading = false;
-  error = '';
-
   factura: Factura = { codigo: '', fecha: '', empresa: '', cif: '', baseImponible: 0, porcentajeIVA: 21 };
-  showFormModal = false;
-  editingId: number | null = null;
-
-  facturaSeleccionada: Factura | null = null;
-
-  showSuccessModal = false;
-  successMessage = '';
-  successData: any = null;
-
   empresas: EmpresaDTO[] = [];
   empresasSugeridas: EmpresaDTO[] = [];
+  showFormModal = false;
+  editingId: number | null = null;
+  loading = false;
+  error = '';
   datosPersonales: DatosPersonales | null = null;
+
+  exportarPDF(): void {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = { left: 40, right: 40, top: 95, bottom: 60 };
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const head = [['Código', 'Fecha', 'Empresa', 'CIF', 'Base Imponible', '% IVA', 'Valor IVA', 'Total']];
+    const body = this.facturas.map(f => [
+      f.codigo ?? '',
+      f.fecha ?? '',
+      f.empresa ?? '',
+      f.cif ?? '',
+      f.baseImponible ?? '',
+      f.porcentajeIVA ?? '',
+      f.valorIVA ?? '',
+      f.total ?? ''
+    ]);
+    const pageTotals: Record<number, number> = {};
+    const cumTotals: Record<number, number> = {};
+    autoTable(doc, {
+      head,
+      body,
+      startY: margin.top,
+      margin,
+      styles: { fontSize: 10, textColor: [0, 0, 0] },
+      headStyles: { fillColor: [110, 193, 255], textColor: [0, 0, 0] },
+      columnStyles: { 4: { halign: 'right' }, 6: { halign: 'right' }, 7: { halign: 'right' } },
+      showFoot: 'everyPage',
+      foot: [[
+        { content: '', colSpan: 6, styles: { halign: 'left' } },
+        { content: '', colSpan: 2, styles: { halign: 'right' } }
+      ]],
+      footStyles: { fillColor: [240, 240, 240] },
+      didDrawPage: (data: any) => {
+        // Encabezado con datos personales solo en la primera página
+        if (data.pageNumber === 1 && this.datosPersonales) {
+          let yPos = 20;
+          doc.setFontSize(9);
+          doc.setTextColor(80, 80, 80);
+          const rightX = pageWidth - margin.right;
+          if (this.datosPersonales.nombre) {
+            doc.text(this.datosPersonales.nombre, rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+          if (this.datosPersonales.nif) {
+            doc.text(`NIF: ${this.datosPersonales.nif}`, rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+          if (this.datosPersonales.direccion) {
+            doc.text(this.datosPersonales.direccion, rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+          if (this.datosPersonales.codigoPostal || this.datosPersonales.ciudad) {
+            const cp = this.datosPersonales.codigoPostal || '';
+            const ciudad = this.datosPersonales.ciudad || '';
+            doc.text(`${cp} ${ciudad}`.trim(), rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+          if (this.datosPersonales.provincia) {
+            doc.text(this.datosPersonales.provincia, rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+          if (this.datosPersonales.telefono) {
+            doc.text(`Teléfono: ${this.datosPersonales.telefono}`, rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+          if (this.datosPersonales.email) {
+            doc.text(`Email: ${this.datosPersonales.email}`, rightX, yPos, { align: 'right' });
+            yPos += 12;
+          }
+        }
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Listado de Facturas', margin.left, 40);
+        doc.setFontSize(11);
+        doc.text('Rango: todas las fechas', margin.left, 58);
+      },
+      didDrawCell: (data: any) => {
+        const p = data.pageNumber || doc.getCurrentPageInfo().pageNumber;
+        if (data.section === 'body' && data.column.index === 7) {
+          const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
+          const val = Number(txt.replace(/,/g, '.')) || 0;
+          pageTotals[p] = (pageTotals[p] || 0) + val;
+        }
+        if (data.section === 'foot') {
+          const prev = p > 1 ? (cumTotals[p - 1] || 0) : 0;
+          const pageTotal = pageTotals[p] || 0;
+          cumTotals[p] = prev + pageTotal;
+          const { cell } = data;
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          if (data.column.index === 0) {
+            doc.text(`Total página: ${pageTotal.toFixed(2)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
+          }
+          if (data.column.index === 6) {
+            doc.text(`Acumulado: ${cumTotals[p].toFixed(2)} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
+              baseline: 'middle',
+              align: 'right'
+            });
+          }
+        }
+      }
+    });
+    doc.save('facturas.pdf');
+  }
 
   constructor(
     private facturasService: FacturasService,
-    private empresasSvc: EmpresasService,
+    private empresasService: EmpresasService,
     private datosPersonalesService: DatosPersonalesService,
     private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.empresasSvc.getAll().subscribe(list => (this.empresas = list));
+    this.empresasService.getAll().subscribe(list => (this.empresas = list));
     this.datosPersonalesService.obtener().subscribe({
       next: datos => this.datosPersonales = datos,
       error: () => this.datosPersonales = null
@@ -70,113 +172,76 @@ export class FacturasListaComponent implements OnInit {
 
   cargarFacturas(): void {
     this.loading = true;
-    this.error = '';
-    this.facturasService
-      .list({
-        limit: this.limit,
-        offset: this.offset,
-        desde: this.desde || undefined,
-        hasta: this.hasta || undefined,
-        empresa: this.empresaFiltro || undefined
-      })
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe({
-        next: res => {
-          this.facturas = res.datos;
-          this.ordenarFacturas();
-          this.total = res.total;
-          this.suma = res.suma;
-          setTimeout(() => this.cd.detectChanges(), 0);
-        },
-        error: err => {
-          console.error('[Facturas] error', err);
-          this.error = 'No se pudieron cargar las facturas';
+    this.facturasService.list().subscribe({
+      next: res => {
+        let lista = (res.datos as any[]).map((f: any) => ({
+          ...f,
+          baseImponible: f['baseimponible'] ?? f.baseImponible,
+          porcentajeIVA: f['porcentajeiva'] ?? f.porcentajeIVA,
+          valorIVA: f['valoriva'] ?? f.valorIVA,
+          total: f['total'] ?? f.total
+        }));
+        if (this.filtroDesde) {
+          lista = lista.filter(f => f.fecha >= this.filtroDesde);
         }
-      });
-  }
-
-  ordenarFacturas(): void {
-    this.facturas.sort((a, b) => {
-      let aVal: string | number = '';
-      let bVal: string | number = '';
-
-      if (this.sortBy === 'fecha') {
-        aVal = a.fecha || '';
-        bVal = b.fecha || '';
-      } else if (this.sortBy === 'empresa') {
-        aVal = (a.empresa || '').toLowerCase();
-        bVal = (b.empresa || '').toLowerCase();
+        if (this.filtroHasta) {
+          lista = lista.filter(f => f.fecha <= this.filtroHasta);
+        }
+        if (this.filtroEmpresa) {
+          lista = lista.filter(f => f.empresa?.toLowerCase().includes(this.filtroEmpresa.toLowerCase()));
+        }
+        lista = lista.sort((a, b) => {
+          let aVal = a[this.sortBy] || '';
+          let bVal = b[this.sortBy] || '';
+          if (this.sortBy === 'fecha') {
+            aVal = aVal.replace(/-/g, '');
+            bVal = bVal.replace(/-/g, '');
+          }
+          if (aVal < bVal) return this.sortOrder === 'asc' ? -1 : 1;
+          if (aVal > bVal) return this.sortOrder === 'asc' ? 1 : -1;
+          return 0;
+        });
+        this.facturas = lista;
+        this.loading = false;
+        this.cd.detectChanges();
+      },
+      error: err => {
+        this.error = 'No se pudieron cargar las facturas';
+        this.loading = false;
       }
-
-      let comparison = 0;
-      if (aVal < bVal) comparison = -1;
-      if (aVal > bVal) comparison = 1;
-
-      return this.sortOrder === 'asc' ? comparison : -comparison;
     });
   }
 
-  cambiarOrden(columna: 'fecha' | 'empresa'): void {
-    if (this.sortBy === columna) {
-      // Si es la misma columna, cambiar dirección
+  aplicarFiltro(): void {
+    this.cargarFacturas();
+  }
+
+  filtroUltimos30Dias(): void {
+    const hoy = new Date();
+    const desde = new Date(hoy);
+    desde.setDate(hoy.getDate() - 29);
+    this.filtroDesde = desde.toISOString().slice(0, 10);
+    this.filtroHasta = hoy.toISOString().slice(0, 10);
+    this.cargarFacturas();
+    this.cd.detectChanges();
+  }
+
+  borrarFiltros(): void {
+    this.filtroDesde = '';
+    this.filtroHasta = '';
+    this.filtroEmpresa = '';
+    this.cargarFacturas();
+    this.cd.detectChanges();
+  }
+
+  ordenarPor(campo: 'fecha' | 'empresa') {
+    if (this.sortBy === campo) {
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
     } else {
-      // Si es diferente, establecer nueva columna con orden ascendente
-      this.sortBy = columna;
+      this.sortBy = campo;
       this.sortOrder = 'asc';
     }
-    this.ordenarFacturas();
-  }
-
-  // Validaciones
-  esEmpresaValida(empresa: string): boolean {
-    // Solo letras, espacios y puntos
-    return /^[a-zA-Z\s.]*$/.test(empresa);
-  }
-
-  validarEmpresa(empresa: string): string {
-    // Filtra caracteres inválidos, mantiene solo letras, espacios y puntos
-    return empresa.replace(/[^a-zA-Z\s.]/g, '');
-  }
-
-  validarPrecio(event: any, field: string): void {
-    const value = parseFloat(event.target.value);
-    if (value <= 0 && value > 0 === false) {
-      if (field === 'baseImponible') {
-        this.factura.baseImponible = 0;
-      }
-    }
-  }
-
-  aplicarFiltros(): void {
-    this.page = 0;
-    this.offset = 0;
     this.cargarFacturas();
-  }
-
-  limpiarFiltros(): void {
-    this.desde = '';
-    this.hasta = '';
-    this.empresaFiltro = '';
-    this.page = 0;
-    this.offset = 0;
-    this.cargarFacturas();
-  }
-
-  prev(): void {
-    if (this.page > 0) {
-      this.page--;
-      this.offset = this.page * this.limit;
-      this.cargarFacturas();
-    }
-  }
-
-  next(): void {
-    if ((this.page + 1) * this.limit < this.total) {
-      this.page++;
-      this.offset = this.page * this.limit;
-      this.cargarFacturas();
-    }
   }
 
   abrirNueva(): void {
@@ -185,218 +250,17 @@ export class FacturasListaComponent implements OnInit {
     this.showFormModal = true;
   }
 
-  calcularIVA(): void {
-    const valorIVA = this.factura.baseImponible * (this.factura.porcentajeIVA / 100);
-    this.factura.valorIVA = Math.round(valorIVA * 100) / 100;
-    this.factura.total = Math.round((this.factura.baseImponible + this.factura.valorIVA) * 100) / 100;
-  }
-
-  guardarFactura(): void {
-    // Validar que todos los campos sean válidos
-    if (!this.factura.codigo || !this.factura.fecha || !this.factura.empresa || !this.factura.cif || this.factura.baseImponible <= 0) {
-      alert('Por favor, completa todos los campos correctamente. La base imponible debe ser mayor que 0.');
-      return;
-    }
-
-    // Validar que la empresa solo contenga letras, espacios y puntos
-    if (!this.esEmpresaValida(this.factura.empresa)) {
-      alert('El nombre de la empresa solo puede contener letras, espacios y puntos.');
-      return;
-    }
-
-    this.calcularIVA();
-    const op = this.editingId
-      ? this.facturasService.update(this.editingId, this.factura)
-      : this.facturasService.create(this.factura);
-
-    op.subscribe(() => {
-      this.successMessage = this.editingId ? '✅ Factura actualizada' : '✅ Factura añadida';
-      this.successData = { ...this.factura };
-      this.showSuccessModal = true;
-      this.showFormModal = false;
-      this.editingId = null;
-      this.cargarFacturas();
-      setTimeout(() => this.showSuccessModal = false, 2500);
-    });
-  }
-
   abrirDetalle(f: Factura): void {
-    this.facturaSeleccionada = { ...f };
+    this.facturaSeleccionada = f;
+    // Puedes mostrar un modal o una sección con los datos de facturaSeleccionada
+    // Ejemplo: this.showDetalleModal = true;
   }
 
-  cerrarDetalle(): void {
-    this.facturaSeleccionada = null;
-  }
-
-  editarFactura(f: Factura): void {
-    this.editingId = f.id || null;
-    this.factura = { ...f };
-    this.showFormModal = true;
-    this.cerrarDetalle();
-  }
-
-  borrarFactura(id?: number): void {
-    if (!id) return;
-    if (confirm('¿Estás seguro de eliminar esta factura?')) {
-      this.facturasService.delete(id).subscribe(() => {
-        this.cargarFacturas();
-        this.cerrarDetalle();
-      });
-    }
-  }
-
-  cerrarForm(): void {
-    this.showFormModal = false;
-    this.editingId = null;
-  }
-
-  // Formatea 'YYYY-MM-DD' a 'DD/MM/YYYY'
-  private formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-');
-    return `${d}/${m}/${y}`;
-  }
-
-  private fmt(n: number): string {
-    return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  private parseEuro(s: string): number {
-    const t = s.replace(/\./g, '').replace(',', '.');
-    return Number(t) || 0;
-  }
-
-  private toYMD(d: Date): string {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  }
-
-  setUltimos30Dias(): void {
-    const hoy = new Date();
-    const hace30 = new Date();
-    hace30.setDate(hoy.getDate() - 30);
-    this.desde = this.toYMD(hace30);
-    this.hasta = this.toYMD(hoy);
-    this.page = 0;
-    this.offset = 0;
-    this.cargarFacturas();
-  }
-
-  exportarPDF(): void {
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const margin = { left: 40, right: 40, top: 95, bottom: 60 };
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Encabezado con datos personales (solo primera página)
-    if (this.datosPersonales && this.datosPersonales.nombre) {
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
-      let yPos = 20;
-      const rightX = pageWidth - margin.right;
-      
-      doc.text(this.datosPersonales.nombre, rightX, yPos, { align: 'right' });
-      yPos += 12;
-      
-      if (this.datosPersonales.nif) {
-        doc.text(`NIF: ${this.datosPersonales.nif}`, rightX, yPos, { align: 'right' });
-        yPos += 12;
-      }
-      if (this.datosPersonales.direccion) {
-        doc.text(this.datosPersonales.direccion, rightX, yPos, { align: 'right' });
-        yPos += 12;
-      }
-      if (this.datosPersonales.codigoPostal || this.datosPersonales.ciudad) {
-        const cp = this.datosPersonales.codigoPostal || '';
-        const ciudad = this.datosPersonales.ciudad || '';
-        doc.text(`${cp} ${ciudad}`.trim(), rightX, yPos, { align: 'right' });
-        yPos += 12;
-      }
-      if (this.datosPersonales.provincia) {
-        doc.text(this.datosPersonales.provincia, rightX, yPos, { align: 'right' });
-        yPos += 12;
-      }
-      if (this.datosPersonales.telefono) {
-        doc.text(`Tel: ${this.datosPersonales.telefono}`, rightX, yPos, { align: 'right' });
-        yPos += 12;
-      }
-      if (this.datosPersonales.email) {
-        doc.text(this.datosPersonales.email, rightX, yPos, { align: 'right' });
-      }
-    }
-
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Listado de Facturas', margin.left, 40);
-
-    // Filtros
-    doc.setFontSize(11);
-    const rango =
-      this.desde || this.hasta
-        ? `Rango: ${this.desde ? this.formatDate(this.desde) : '...'} a ${this.hasta ? this.formatDate(this.hasta) : '...'}`
-        : 'Rango: todas las fechas';
-    const empresaTxt = this.empresaFiltro ? `Empresa: ${this.empresaFiltro}` : 'Empresa: todas';
-    doc.text(rango, margin.left, 58);
-    doc.text(empresaTxt, margin.left, 74);
-
-    const head = [['Nº', 'Fecha', 'Número de factura', 'Empresa', 'CIF', 'Total €']];
-    const body = this.facturas.map((f, i) => [
-      (i + 1).toString(),
-      f.fecha,
-      f.codigo,
-      f.empresa,
-      f.cif,
-      this.fmt(f.total ?? 0)
-    ]);
-
-    const pageTotals: Record<number, number> = {};
-    const cumTotals: Record<number, number> = {};
-
-    autoTable(doc, {
-      head,
-      body,
-      startY: margin.top,
-      margin,
-      styles: { fontSize: 10, textColor: [0, 0, 0] },
-      headStyles: { fillColor: [110, 193, 255], textColor: [0, 0, 0] },
-      columnStyles: { 5: { halign: 'right' } }, // Total ahora es la col 5
-      showFoot: 'everyPage',
-      foot: [[
-        { content: '', colSpan: 3, styles: { halign: 'left' } },
-        { content: '', colSpan: 3, styles: { halign: 'right' } }
-      ]],
-      footStyles: { fillColor: [240, 240, 240] },
-      didDrawCell: (data: any) => {
-        const p = data.pageNumber ?? doc.getCurrentPageInfo().pageNumber;
-
-        if (data.section === 'body' && data.column.index === 5) {
-          const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
-          const val = this.parseEuro(txt);
-          pageTotals[p] = (pageTotals[p] || 0) + val;
-        }
-
-        if (data.section === 'foot') {
-          const prev = p > 1 ? (cumTotals[p - 1] || 0) : 0;
-          const pageTotal = pageTotals[p] || 0;
-          cumTotals[p] = prev + pageTotal;
-
-          const { cell } = data;
-          doc.setFontSize(10);
-          doc.setTextColor(0, 0, 0);
-
-          if (data.column.index === 0) {
-            doc.text(`Total página: ${this.fmt(pageTotal)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
-          }
-          if (data.column.index === 3) {
-            doc.text(`Acumulado: ${this.fmt(cumTotals[p])} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
-              baseline: 'middle',
-              align: 'right'
-            });
-          }
-        }
-      }
-    });
-
-    doc.save('facturas.pdf');
+  calcularIVA(): void {
+    const base = Number(this.factura.baseImponible) || 0;
+    const iva = Number(this.factura.porcentajeIVA) || 21;
+    this.factura.valorIVA = Math.round(base * (iva / 100) * 100) / 100;
+    this.factura.total = Math.round((base + this.factura.valorIVA) * 100) / 100;
   }
 
   buscarEmpresas(termino: string): void {
@@ -404,16 +268,34 @@ export class FacturasListaComponent implements OnInit {
       this.empresasSugeridas = [];
       return;
     }
-    this.empresasSvc.search(termino).subscribe(empresas => {
+    this.empresasService.search(termino).subscribe((empresas: EmpresaDTO[]) => {
       this.empresasSugeridas = empresas;
     });
   }
 
   autocompletarCIF(): void {
-    // Buscar si la empresa existe en las sugerencias
-    const empresa = this.empresasSugeridas.find(e => e.nombre === this.factura.empresa);
-    if (empresa) {
+    const empresa: EmpresaDTO | undefined = this.empresasSugeridas.find((e: EmpresaDTO) => e.nombre === this.factura.empresa);
+    if (empresa && this.factura) {
       this.factura.cif = empresa.cif;
     }
+  }
+
+  guardarFactura(): void {
+    this.calcularIVA();
+    if (!this.factura || !this.factura.empresa || !this.factura.cif) {
+      this.error = 'Empresa y CIF son obligatorios';
+      return;
+    }
+    const existe: EmpresaDTO | undefined = this.empresas.find((e: EmpresaDTO) => e.nombre === this.factura.empresa);
+    if (!existe) {
+      this.empresasService.save(this.factura.empresa, this.factura.cif).subscribe();
+    }
+    const op = this.editingId
+      ? this.facturasService.update(this.editingId, this.factura)
+      : this.facturasService.create(this.factura);
+    op.subscribe(() => {
+      this.showFormModal = false;
+      this.cargarFacturas();
+    });
   }
 }

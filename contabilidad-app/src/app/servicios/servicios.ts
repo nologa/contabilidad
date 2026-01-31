@@ -88,7 +88,11 @@ export class ServiciosListaComponent implements OnInit {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
-          this.servicios = res.datos;
+          // Calcula importeFinal correctamente para cada servicio
+          this.servicios = res.datos.map(s => ({
+            ...s,
+            importeFinal: Math.round(((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)) * 100) / 100
+          }));
           this.ordenarServicios();
           this.total = res.total;
           this.suma = res.suma;
@@ -223,7 +227,7 @@ export class ServiciosListaComponent implements OnInit {
       s.fecha,
       this.fmt(s.importe ?? 0),
       `${s.descuento ?? 0}`,
-      this.fmt(s.importeFinal ?? ((s.importe ?? 0) - (s.descuento ?? 0)))
+      this.fmt(s.importeFinal ?? ((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)))
     ]);
 
     const pageTotals: Record<number, number> = {};
