@@ -247,14 +247,16 @@ app.post('/auth/forgot-password', async (req, res) => {
     const mailOptions = {
       from: process.env.GMAIL_USER || 'tu-email@gmail.com',
       to: user.email,
-      subject: 'Recuperación de contraseña - Contabilidad App',
+      subject: 'Recuperación de contraseña - Las Cuentas de Agustín',
       html: `
         <h2>Recuperación de contraseña</h2>
-        <p>Has solicitado restablecer tu contraseña.</p>
+        <p>Has solicitado restablecer tu contraseña para el sitio Las Cuentas de Agustín.</p>
         <p>Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
         <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #6cc1ff; color: white; text-decoration: none; border-radius: 5px;">Restablecer contraseña</a>
         <p>Este enlace expirará en 1 hora.</p>
         <p>Si no solicitaste este cambio, ignora este email.</p>
+        <p>Si tienes algún problema, contacta con la administradora del sitio.</p>
+        <p>--<br>El equipo de Las Cuentas de Agustín</p>
       `
     };
 
