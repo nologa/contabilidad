@@ -145,7 +145,13 @@ if (DB_TYPE === 'postgres') {
 const SECRET = process.env.JWT_SECRET || 'cambia-esto';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:4200',
+    'https://lascuentasdeagustin.netlify.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Configuración de Nodemailer
