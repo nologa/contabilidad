@@ -32,21 +32,17 @@ export class ForgotPasswordComponent {
     this.error = '';
     this.success = false;
 
-    this.http.post(`${this.apiUrl}/auth/forgot-password`, { email: this.email })
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: () => {
-          this.zone.run(() => {
+      this.http.post(`${this.apiUrl}/auth/forgot-password`, { email: this.email })
+        .pipe(finalize(() => this.loading = false))
+        .subscribe({
+          next: () => {
             this.success = true;
             this.cd.markForCheck();
-          });
-        },
-        error: err => {
-          this.zone.run(() => {
+          },
+          error: err => {
             this.error = err.error?.error || 'Error al enviar el email';
-            this.cd.detectChanges();
-          });
-        }
-      });
+            this.cd.markForCheck();
+          }
+        });
   }
 }

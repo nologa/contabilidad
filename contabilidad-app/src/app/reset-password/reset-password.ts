@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
@@ -23,7 +23,8 @@ export class ResetPasswordComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cd: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -47,7 +48,7 @@ export class ResetPasswordComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.http.post('http://localhost:3000/auth/reset-password', {
+    this.http.post('https://contabilidad-eyy9.onrender.com/auth/reset-password', {
       token: this.token,
       newPassword: this.newPassword
     })
@@ -55,6 +56,7 @@ export class ResetPasswordComponent implements OnInit {
     .subscribe({
       next: () => {
         this.success = true;
+        this.cd.markForCheck();
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 3000);

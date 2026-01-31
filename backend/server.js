@@ -208,12 +208,19 @@ app.post('/auth/login', async (req, res) => {
   res.json({ token });
 });
 
-app.post('/auth/forgot-password', (req, res) => {
+app.post('/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body || {};
     if (!email) return res.status(400).json({ error: 'Email requerido' });
 
-    const user = db.prepare('SELECT id, email FROM users WHERE email = ?').get(email);
+    let user;
+    if (DB_TYPE === 'postgres') {
+      const result = await pgPool.query('SELECT id, email FROM users WHERE email = $1', [email]);
+      user = result.rows[0];
+    } else {
+      user = db.prepare('SELECT id, email FROM users WHERE email = ?').get(email);
+    }
+
     if (!user) {
       // Por seguridad, no revelar si el usuario existe
       return res.json({ message: 'Si el email existe, recibirás un enlace de recuperación' });
@@ -224,7 +231,14 @@ app.post('/auth/forgot-password', (req, res) => {
     const expiresAt = new Date(Date.now() + 3600000).toISOString(); // 1 hora
 
     // Guardar token
-    db.prepare('INSERT INTO resetTokens (userId, token, expiresAt) VALUES (?, ?, ?)').run(user.id, token, expiresAt);
+    if (DB_TYPE === 'postgres') {
+      await pgPool.query(
+        'INSERT INTO resetTokens (userId, token, expiresAt) VALUES ($1, $2, $3)',
+        [user.id, token, expiresAt]
+      );
+    } else {
+      db.prepare('INSERT INTO resetTokens (userId, token, expiresAt) VALUES (?, ?, ?)').run(user.id, token, expiresAt);
+    }
 
     // URL del frontend (ajusta según tu configuración)
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:4200'}/reset-password?token=${token}`;
