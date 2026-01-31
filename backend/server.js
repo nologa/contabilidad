@@ -274,7 +274,7 @@ app.post('/auth/forgot-password', async (req, res) => {
   }
 });
 
-app.post('/auth/reset-password', (req, res) => {
+app.post('/auth/reset-password', async (req, res) => {
   try {
     const { token, newPassword } = req.body || {};
     
@@ -286,11 +286,21 @@ app.post('/auth/reset-password', (req, res) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
     }
 
-    // Buscar token válido
-    const resetToken = db.prepare(`
-      SELECT * FROM resetTokens 
-      WHERE token = ? AND used = 0 AND datetime(expiresAt) > datetime('now')
-    `).get(token);
+    let resetToken, userId;
+    if (DB_TYPE === 'postgres') {
+      const result = await pgPool.query(
+        `SELECT * FROM resetTokens WHERE token = $1 AND used = 0 AND expiresAt > NOW()`,
+        [token]
+      );
+      resetToken = result.rows[0];
+      if (resetToken) userId = resetToken.userid || resetToken.userId;
+    } else {
+      resetToken = db.prepare(`
+        SELECT * FROM resetTokens 
+        WHERE token = ? AND used = 0 AND datetime(expiresAt) > datetime('now')
+      `).get(token);
+      if (resetToken) userId = resetToken.userId;
+    }
 
     if (!resetToken) {
       return res.status(400).json({ error: 'Token inválido o expirado' });
@@ -298,10 +308,13 @@ app.post('/auth/reset-password', (req, res) => {
 
     // Actualizar contraseña
     const hash = bcrypt.hashSync(newPassword, 10);
-    db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hash, resetToken.userId);
-
-    // Marcar token como usado
-    db.prepare('UPDATE resetTokens SET used = 1 WHERE id = ?').run(resetToken.id);
+    if (DB_TYPE === 'postgres') {
+      await pgPool.query('UPDATE users SET password = $1 WHERE id = $2', [hash, userId]);
+      await pgPool.query('UPDATE resetTokens SET used = 1 WHERE id = $1', [resetToken.id]);
+    } else {
+      db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hash, userId);
+      db.prepare('UPDATE resetTokens SET used = 1 WHERE id = ?').run(resetToken.id);
+    }
 
     res.json({ message: 'Contraseña actualizada correctamente' });
 
