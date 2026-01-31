@@ -7,7 +7,7 @@ import { ReporteServicio, ReporteFactura } from '../models/reporte';
 
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
-  private baseUrl = 'http://localhost:3000/reportes';
+  private baseUrl = 'https://contabilidad-eyy9.onrender.com/reportes';
 
   constructor(private http: HttpClient) {}
 

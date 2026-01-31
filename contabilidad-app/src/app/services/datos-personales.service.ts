@@ -18,7 +18,7 @@ export interface DatosPersonales {
 
 @Injectable({ providedIn: 'root' })
 export class DatosPersonalesService {
-  private baseUrl = 'http://localhost:3000/datosPersonales';
+  private baseUrl = 'https://contabilidad-eyy9.onrender.com/datosPersonales';
 
   constructor(private http: HttpClient) {}
 

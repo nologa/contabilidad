@@ -5,7 +5,7 @@ import { Servicio } from '../models/servicio';
 
 @Injectable({ providedIn: 'root' })
 export class ServiciosService {
-  private baseUrl = 'http://localhost:3000/servicios';
+  private baseUrl = 'https://contabilidad-eyy9.onrender.com/servicios';
 
   constructor(private http: HttpClient) {}
 

@@ -5,7 +5,7 @@ import { Factura } from '../models/factura';
 
 @Injectable({ providedIn: 'root' })
 export class FacturasService {
-  private baseUrl = 'http://localhost:3000/facturas';
+  private baseUrl = 'https://contabilidad-eyy9.onrender.com/facturas';
 
   constructor(private http: HttpClient) {}
 

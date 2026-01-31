@@ -6,7 +6,7 @@ export interface EmpresaDTO { nombre: string; cif: string; }
 
 @Injectable({ providedIn: 'root' })
 export class EmpresasService {
-  private baseUrl = 'http://localhost:3000/empresas';
+  private baseUrl = 'https://contabilidad-eyy9.onrender.com/empresas';
 
   constructor(private http: HttpClient) {}
 
