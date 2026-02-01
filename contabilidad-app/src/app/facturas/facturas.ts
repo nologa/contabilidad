@@ -40,6 +40,9 @@ export class FacturasListaComponent implements OnInit {
   filtroEmpresa: string = '';
   sortBy: 'fecha' | 'empresa' = 'fecha';
   sortOrder: 'asc' | 'desc' = 'desc';
+  vistaTabla = true;
+  totalFacturas = 0;
+  sumaTotal = 0;
   facturas: Factura[] = [];
   factura: Factura = { codigo: '', fecha: '', empresa: '', cif: '', baseImponible: 0, porcentajeIVA: 21 };
   empresas: EmpresaDTO[] = [];
@@ -202,6 +205,8 @@ export class FacturasListaComponent implements OnInit {
           return 0;
         });
         this.facturas = lista;
+        this.totalFacturas = lista.length;
+        this.sumaTotal = lista.reduce((acc, f) => acc + (f.total || 0), 0);
         this.loading = false;
         this.cd.detectChanges();
       },

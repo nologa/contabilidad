@@ -45,7 +45,7 @@
 
     <div class="summary-top">
       <span class="summary-pill">Total registros: {{ total }}</span>
-      <span class="summary-pill">Suma importes: {{ suma | number:'1.2-2' }} €</span>
+      <span class="summary-pill">Suma importes: {{ suma | number:'1.2-2':'es' }} €</span>
     </div>
 
     @if (vistaTabla) {
@@ -79,9 +79,9 @@
                 <td class="text-center">{{ i + 1 }}</td>
                 <td>{{ s.fecha | date:'dd/MM/yy' }}</td>
                 <td>{{ s.codigo }}</td>
-                <td class="text-end">{{ s.importe | number:'1.2-2' }}</td>
-                <td class="text-end">{{ s.descuento | number:'1.0-2' }}%</td>
-                <td class="text-end">{{ s.importeFinal | number:'1.2-2' }}</td>
+                <td class="text-end">{{ s.importe | number:'1.2-2':'es' }}</td>
+                <td class="text-end">{{ s.descuento | number:'1.0-2':'es' }}%</td>
+                <td class="text-end">{{ s.importeFinal | number:'1.2-2':'es' }}</td>
                 <td class="text-center">
                   <button class="btn btn-sm btn-info" (click)="abrirDetalle(s)">Ver</button>
                 </td>
@@ -97,9 +97,9 @@
             <div class="card-body">
               <h6 class="card-title">{{ s.codigo }}</h6>
               <p class="card-text mb-1"><strong>Fecha:</strong> {{ s.fecha | date:'dd/MM/yy' }}</p>
-              <p class="card-text mb-1"><strong>Importe:</strong> {{ s.importe | number:'1.2-2' }} €</p>
-              <p class="card-text mb-1"><strong>Descuento:</strong> {{ s.descuento | number:'1.0-2' }}%</p>
-              <p class="card-text mb-0"><strong>Final:</strong> {{ s.importeFinal | number:'1.2-2' }} €</p>
+              <p class="card-text mb-1"><strong>Importe:</strong> {{ s.importe | number:'1.2-2':'es' }} €</p>
+              <p class="card-text mb-1"><strong>Descuento:</strong> {{ s.descuento | number:'1.0-2':'es' }}%</p>
+              <p class="card-text mb-0"><strong>Final:</strong> {{ s.importeFinal | number:'1.2-2':'es' }} €</p>
             </div>
           </div>
         }
@@ -127,9 +127,9 @@
           <div class="modal-body">
             <p><strong>Código:</strong> {{ servicioSeleccionado.codigo }}</p>
             <p><strong>Fecha:</strong> {{ servicioSeleccionado.fecha | date:'dd/MM/yy' }}</p>
-            <p><strong>Importe:</strong> {{ servicioSeleccionado.importe | number:'1.2-2' }} €</p>
-            <p><strong>Descuento:</strong> {{ servicioSeleccionado.descuento | number:'1.0-2' }}%</p>
-            <p><strong>Final:</strong> {{ servicioSeleccionado.importeFinal | number:'1.2-2' }} €</p>
+            <p><strong>Importe:</strong> {{ servicioSeleccionado.importe | number:'1.2-2':'es' }} €</p>
+            <p><strong>Descuento:</strong> {{ servicioSeleccionado.descuento | number:'1.0-2':'es' }}%</p>
+            <p><strong>Final:</strong> {{ servicioSeleccionado.importeFinal | number:'1.2-2':'es' }} €</p>
           </div>
           <div class="modal-footer">
             <button class="btn btn-primary" (click)="editarServicio(servicioSeleccionado)">Modificar</button>

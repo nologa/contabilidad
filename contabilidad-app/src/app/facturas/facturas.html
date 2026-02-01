@@ -26,9 +26,19 @@
         <button class="btn btn-outline-primary" (click)="borrarFiltros()">Ver todo</button>
         <button class="btn btn-primary" (click)="aplicarFiltro()">Buscar</button>
       </div>
+      <div class="col-12 col-md-auto ms-md-auto">
+        <button class="btn btn-outline-secondary" (click)="vistaTabla = !vistaTabla">
+          {{ vistaTabla ? '📋 Tarjetas' : '📊 Tabla' }}
+        </button>
+      </div>
     </div>
 
-    <div class="table-responsive">
+    <div class="summary-top">
+      <span class="summary-pill">Total registros: {{ totalFacturas }}</span>
+      <span class="summary-pill">Suma totales: {{ sumaTotal | number:'1.2-2':'es' }} €</span>
+    </div>
+
+    @if (vistaTabla) {
       <table class="table table-striped table-sm" *ngIf="facturas.length > 0">
         <thead>
           <tr>
@@ -51,10 +61,10 @@
             <td>{{ f.codigo }}</td>
             <td>{{ f.empresa }}</td>
             <td>{{ f.cif }}</td>
-            <td class="text-end">{{ f.baseImponible | number:'1.2-2' }}</td>
-            <td class="text-end">{{ f.porcentajeIVA | number:'1.0-2' }}</td>
-            <td class="text-end">{{ f.valorIVA | number:'1.2-2' }}</td>
-            <td class="text-end">{{ f.total | number:'1.2-2' }}</td>
+            <td class="text-end">{{ f.baseImponible | number:'1.2-2':'es' }}</td>
+            <td class="text-end">{{ f.porcentajeIVA | number:'1.0-2':'es' }}</td>
+            <td class="text-end">{{ f.valorIVA | number:'1.2-2':'es' }}</td>
+            <td class="text-end">{{ f.total | number:'1.2-2':'es' }}</td>
             <td class="text-center">
               <button class="btn btn-sm btn-info" (click)="abrirDetalle(f)">Ver</button>
             </td>
@@ -64,6 +74,26 @@
       <p *ngIf="!loading && facturas.length === 0" class="alert alert-info mb-0">No hay facturas.</p>
       <p *ngIf="loading" class="text-muted mb-0">Cargando...</p>
     </div>
+    } @else {
+      <div>
+        @for (f of facturas; track f.codigo) {
+          <div class="card mb-2">
+            <div class="card-body">
+              <h6 class="card-title">{{ f.codigo }}</h6>
+              <p class="card-text mb-1"><strong>Fecha:</strong> {{ f.fecha }}</p>
+              <p class="card-text mb-1"><strong>Empresa:</strong> {{ f.empresa }}</p>
+              <p class="card-text mb-1"><strong>CIF:</strong> {{ f.cif }}</p>
+              <p class="card-text mb-1"><strong>Base Imponible:</strong> {{ f.baseImponible | number:'1.2-2':'es' }} €</p>
+              <p class="card-text mb-1"><strong>IVA:</strong> {{ f.porcentajeIVA | number:'1.0-2':'es' }}% (€{{ f.valorIVA | number:'1.2-2':'es' }})</p>
+              <p class="card-text mb-0"><strong>Total:</strong> {{ f.total | number:'1.2-2':'es' }} €</p>
+              <button class="btn btn-sm btn-info mt-2" (click)="abrirDetalle(f)">Ver</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+    <p *ngIf="!loading && facturas.length === 0" class="alert alert-info">No hay facturas.</p>
+    <p *ngIf="loading" class="text-muted">Cargando...</p>
     @if (showFormModal) {
       <div class="modal-overlay" (click)="showFormModal = false">
         <div class="modal-card" (click)="$event.stopPropagation()">
@@ -135,10 +165,10 @@
             <p><strong>Fecha:</strong> {{ facturaSeleccionada.fecha }}</p>
             <p><strong>Empresa:</strong> {{ facturaSeleccionada.empresa }}</p>
             <p><strong>CIF:</strong> {{ facturaSeleccionada.cif }}</p>
-            <p><strong>Base Imponible:</strong> {{ facturaSeleccionada.baseImponible | number:'1.2-2' }} €</p>
-            <p><strong>IVA (%):</strong> {{ facturaSeleccionada.porcentajeIVA | number:'1.0-2' }}%</p>
-            <p><strong>IVA (€):</strong> {{ facturaSeleccionada.valorIVA | number:'1.2-2' }} €</p>
-            <p><strong>Total:</strong> {{ facturaSeleccionada.total | number:'1.2-2' }} €</p>
+            <p><strong>Base Imponible:</strong> {{ facturaSeleccionada.baseImponible | number:'1.2-2':'es' }} €</p>
+            <p><strong>IVA (%):</strong> {{ facturaSeleccionada.porcentajeIVA | number:'1.0-2':'es' }}%</p>
+            <p><strong>IVA (€):</strong> {{ facturaSeleccionada.valorIVA | number:'1.2-2':'es' }} €</p>
+            <p><strong>Total:</strong> {{ facturaSeleccionada.total | number:'1.2-2':'es' }} €</p>
           </div>
           <div class="modal-footer">
             <button class="btn btn-primary" (click)="editarFactura(facturaSeleccionada)">Modificar</button>
