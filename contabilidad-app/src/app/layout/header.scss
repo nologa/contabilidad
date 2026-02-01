@@ -49,11 +49,21 @@
 
 .app-header .navbar-nav {
   margin: 0;
+  justify-content: flex-end;
+  text-align: right;
 }
 
 @media (max-width: 576px) {
   .app-header h1 {
     font-size: 2.6rem;
     line-height: 1.15;
+  }
+  
+  .app-header .navbar-nav {
+    text-align: right;
+  }
+  
+  .app-header .nav-link {
+    text-align: right;
   }
 }
