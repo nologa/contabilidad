@@ -1,36 +1,33 @@
 <div class="list-page card shadow-sm">
   <div class="card-body">
-        <div class="row mb-3 g-2">
-          <div class="col-auto">
-            <label class="form-label mb-0">Desde</label>
-            <input type="date" class="form-control" [(ngModel)]="filtroDesde" (change)="aplicarFiltro()">
-          </div>
-          <div class="col-auto">
-            <label class="form-label mb-0">Hasta</label>
-            <input type="date" class="form-control" [(ngModel)]="filtroHasta" (change)="aplicarFiltro()">
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-primary mt-4" (click)="filtroUltimos30Dias()">Últimos 30 días</button>
-          </div>
-          <div class="col-auto">
-            <label class="form-label mb-0">Empresa</label>
-            <input type="text" class="form-control" [(ngModel)]="filtroEmpresa" (input)="aplicarFiltro()">
-          </div>
-        </div>
-        <div class="row mb-3 justify-content-between">
-          <div class="col-auto">
-            <button class="btn btn-outline-danger" (click)="borrarFiltros()">Borrar filtros</button>
-          </div>
-          <div class="col-auto ms-auto">
-            <button class="btn btn-outline-primary me-2" (click)="exportarPDF()">Generar PDF</button>
-            <button class="btn btn-primary" (click)="abrirNueva()">Nueva factura</button>
-          </div>
-        </div>
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2>Facturas</h2>
       <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" (click)="exportarPDF()" [disabled]="facturas.length === 0">Exportar PDF</button>
+        <button class="btn btn-primary" (click)="abrirNueva()">Nueva factura</button>
       </div>
     </div>
+
+    <div class="row g-2 mb-2 align-items-end flex-wrap">
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Desde</label>
+        <input type="date" class="form-control" [(ngModel)]="filtroDesde">
+      </div>
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Hasta</label>
+        <input type="date" class="form-control" [(ngModel)]="filtroHasta">
+      </div>
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Empresa</label>
+        <input type="text" class="form-control" [(ngModel)]="filtroEmpresa" placeholder="Buscar empresa...">
+      </div>
+      <div class="col-12 col-md-auto d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-primary" (click)="filtroUltimos30Dias()">Últimos 30 días</button>
+        <button class="btn btn-outline-primary" (click)="borrarFiltros()">Ver todo</button>
+        <button class="btn btn-primary" (click)="aplicarFiltro()">Buscar</button>
+      </div>
+    </div>
+
     <div class="table-responsive">
       <table class="table table-striped table-sm" *ngIf="facturas.length > 0">
         <thead>
@@ -95,10 +92,10 @@
                 <small class="text-danger" *ngIf="factura.empresa === ''">La empresa es obligatoria</small>
               </div>
               <div class="mb-2">
-                <label class="form-label">CIF * (Formato: X00000000)</label>
+                <label class="form-label">CIF *</label>
                 <input type="text" class="form-control" [(ngModel)]="factura.cif" name="cif" required maxlength="9" style="text-transform: uppercase;">
                 <small class="text-danger" *ngIf="factura.cif === ''">El CIF es obligatorio</small>
-                <small class="text-danger" *ngIf="factura.cif !== '' && !validarCIF(factura.cif)">Formato incorrecto: debe ser una letra seguida de 8 números</small>
+                <small class="text-danger" *ngIf="factura.cif !== '' && !validarCIF(factura.cif)">incorrecto: debe ser una letra seguida de 8 números</small>
               </div>
               <div class="mb-2">
                 <label class="form-label">Base Imponible (€) *</label>
