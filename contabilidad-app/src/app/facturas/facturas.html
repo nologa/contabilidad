@@ -10,6 +10,20 @@
 
     <div class="row g-2 mb-2 align-items-end flex-wrap">
       <div class="col-12 col-md-auto">
+        <label class="form-label">Año</label>
+        <select class="form-select" [(ngModel)]="anoSeleccionado" (change)="cambiarMes()">
+          <option value="">Seleccionar año</option>
+          <option *ngFor="let a of anos" [value]="a.toString()">{{ a }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Mes</label>
+        <select class="form-select" [(ngModel)]="mesSeleccionado" (change)="cambiarMes()" [disabled]="!anoSeleccionado">
+          <option value="">Seleccionar mes</option>
+          <option *ngFor="let m of meses" [value]="m.num">{{ m.nombre }}</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-auto">
         <label class="form-label">Desde</label>
         <input type="date" class="form-control" [(ngModel)]="filtroDesde">
       </div>

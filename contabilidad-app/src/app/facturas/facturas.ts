@@ -37,6 +37,23 @@ export class FacturasListaComponent implements OnInit {
     }
   filtroDesde: string = '';
   filtroHasta: string = '';
+  anoSeleccionado = '';
+  mesSeleccionado = '';
+  meses = [
+    { num: '01', nombre: 'Enero' },
+    { num: '02', nombre: 'Febrero' },
+    { num: '03', nombre: 'Marzo' },
+    { num: '04', nombre: 'Abril' },
+    { num: '05', nombre: 'Mayo' },
+    { num: '06', nombre: 'Junio' },
+    { num: '07', nombre: 'Julio' },
+    { num: '08', nombre: 'Agosto' },
+    { num: '09', nombre: 'Septiembre' },
+    { num: '10', nombre: 'Octubre' },
+    { num: '11', nombre: 'Noviembre' },
+    { num: '12', nombre: 'Diciembre' }
+  ];
+  anos: number[] = [];
   filtroEmpresa: string = '';
   sortBy: 'fecha' | 'empresa' = 'fecha';
   sortOrder: 'asc' | 'desc' = 'desc';
@@ -184,6 +201,15 @@ export class FacturasListaComponent implements OnInit {
           valorIVA: f['valoriva'] ?? f.valorIVA,
           total: f['total'] ?? f.total
         }));
+        
+        // Extraer años únicos de los datos
+        const anosUnicos = new Set<number>();
+        lista.forEach(f => {
+          const ano = parseInt(f.fecha.split('-')[0]);
+          if (!isNaN(ano)) anosUnicos.add(ano);
+        });
+        this.anos = Array.from(anosUnicos).sort((a, b) => a - b);
+        
         if (this.filtroDesde) {
           lista = lista.filter(f => f.fecha >= this.filtroDesde);
         }
@@ -227,8 +253,22 @@ export class FacturasListaComponent implements OnInit {
     desde.setDate(hoy.getDate() - 29);
     this.filtroDesde = desde.toISOString().slice(0, 10);
     this.filtroHasta = hoy.toISOString().slice(0, 10);
+    this.anoSeleccionado = '';
+    this.mesSeleccionado = '';
     this.cargarFacturas();
     this.cd.detectChanges();
+  }
+
+  cambiarMes(): void {
+    if (!this.anoSeleccionado || !this.mesSeleccionado) {
+      this.filtroDesde = '';
+      this.filtroHasta = '';
+      return;
+    }
+    this.filtroDesde = `${this.anoSeleccionado}-${this.mesSeleccionado}-01`;
+    const ultimoDia = new Date(parseInt(this.anoSeleccionado), parseInt(this.mesSeleccionado), 0).getDate();
+    this.filtroHasta = `${this.anoSeleccionado}-${this.mesSeleccionado}-${ultimoDia.toString().padStart(2, '0')}`;
+    this.aplicarFiltro();
   }
 
   borrarFiltros(): void {

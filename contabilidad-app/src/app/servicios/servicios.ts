@@ -26,6 +26,23 @@ export class ServiciosListaComponent implements OnInit {
   offset = 0;
   desde = '';
   hasta = '';
+  anoSeleccionado = '';
+  mesSeleccionado = '';
+  meses = [
+    { num: '01', nombre: 'Enero' },
+    { num: '02', nombre: 'Febrero' },
+    { num: '03', nombre: 'Marzo' },
+    { num: '04', nombre: 'Abril' },
+    { num: '05', nombre: 'Mayo' },
+    { num: '06', nombre: 'Junio' },
+    { num: '07', nombre: 'Julio' },
+    { num: '08', nombre: 'Agosto' },
+    { num: '09', nombre: 'Septiembre' },
+    { num: '10', nombre: 'Octubre' },
+    { num: '11', nombre: 'Noviembre' },
+    { num: '12', nombre: 'Diciembre' }
+  ];
+  anos: number[] = [];
   vistaTabla = true;
 
   // Ordenamiento
@@ -78,6 +95,20 @@ export class ServiciosListaComponent implements OnInit {
     d.setDate(hoy.getDate() - 30);
     this.desde = d.toISOString().slice(0, 10);
     this.hasta = hoy.toISOString().slice(0, 10);
+    this.anoSeleccionado = '';
+    this.mesSeleccionado = '';
+  }
+
+  cambiarMes(): void {
+    if (!this.anoSeleccionado || !this.mesSeleccionado) {
+      this.desde = '';
+      this.hasta = '';
+      return;
+    }
+    this.desde = `${this.anoSeleccionado}-${this.mesSeleccionado}-01`;
+    const ultimoDia = new Date(parseInt(this.anoSeleccionado), parseInt(this.mesSeleccionado), 0).getDate();
+    this.hasta = `${this.anoSeleccionado}-${this.mesSeleccionado}-${ultimoDia.toString().padStart(2, '0')}`;
+    this.aplicarFiltro();
   }
 
   cargarServicios(): void {
@@ -93,6 +124,15 @@ export class ServiciosListaComponent implements OnInit {
             ...s,
             importeFinal: Math.round(((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)) * 100) / 100
           }));
+          
+          // Extraer años únicos de los datos
+          const anosUnicos = new Set<number>();
+          res.datos.forEach(s => {
+            const ano = parseInt(s.fecha.split('-')[0]);
+            if (!isNaN(ano)) anosUnicos.add(ano);
+          });
+          this.anos = Array.from(anosUnicos).sort((a, b) => a - b);
+          
           this.ordenarServicios();
           this.total = res.total;
           this.suma = res.suma;
