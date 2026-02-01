@@ -315,6 +315,7 @@ export class ServiciosListaComponent implements OnInit {
       return;
     }
 
+    console.log('Guardando con editingId:', this.editingId); // Debug
     const op = this.editingId != null
       ? this.serviciosService.update(this.editingId, this.servicio)
       : this.serviciosService.create(this.servicio);
@@ -354,8 +355,9 @@ export class ServiciosListaComponent implements OnInit {
   }
 
   editarServicio(s: Servicio): void {
-    this.editingId = (s as any).id ?? null;
+    this.editingId = s.id ?? null;
     this.servicio = {
+      ...s,
       codigo: s.codigo,
       fecha: s.fecha,
       importe: s.importe ?? 0,
@@ -363,16 +365,25 @@ export class ServiciosListaComponent implements OnInit {
       importeFinal: s.importeFinal ?? ((s.importe ?? 0) - (s.descuento ?? 0))
     };
     this.showFormModal = true;
+    console.log('Editando servicio con ID:', this.editingId); // Debug
   }
 
   borrarServicio(id?: number): void {
-    if (id == null) return;
+    if (id == null) {
+      console.warn('No se puede borrar: ID no disponible');
+      alert('No se puede borrar: ID no disponible');
+      return;
+    }
+    console.log('Borrando servicio con ID:', id); // Debug
     this.serviciosService.delete(id).subscribe({
       next: () => {
         this.cerrarDetalle();
         this.cargarServicios();
       },
-      error: err => console.error(err)
+      error: err => {
+        console.error('Error al borrar:', err);
+        alert('Error al borrar el servicio');
+      }
     });
   }
 }

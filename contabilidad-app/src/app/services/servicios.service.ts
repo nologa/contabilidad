@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Servicio } from '../models/servicio';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +16,21 @@ export class ServiciosService {
     if (params.offset) httpParams = httpParams.set('offset', params.offset.toString());
     if (params.desde) httpParams = httpParams.set('desde', params.desde);
     if (params.hasta) httpParams = httpParams.set('hasta', params.hasta);
-    return this.http.get<{ datos: Servicio[]; total: number; suma: number }>(this.baseUrl, { params: httpParams });
+    return this.http.get<{ datos: any[]; total: number; suma: number }>(this.baseUrl, { params: httpParams })
+      .pipe(
+        map(response => ({
+          datos: response.datos.map(s => ({
+            id: s.id,
+            fecha: s.fecha,
+            codigo: s.codigo,
+            importe: s.importe,
+            descuento: s.descuento,
+            importeFinal: s.importeFinal
+          } as Servicio)),
+          total: response.total,
+          suma: response.suma
+        }))
+      );
   }
 
   create(servicio: Servicio): Observable<Servicio> {
