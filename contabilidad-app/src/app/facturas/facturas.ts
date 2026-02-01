@@ -280,12 +280,33 @@ export class FacturasListaComponent implements OnInit {
     }
   }
 
+  validarCIF(cif: string): boolean {
+    // Formato: letra + 8 dígitos (ej: A12345678)
+    const regexCIF = /^[A-Z][0-9]{8}$/;
+    return regexCIF.test(cif.toUpperCase());
+  }
+
   guardarFactura(): void {
     this.calcularIVA();
-    if (!this.factura || !this.factura.empresa || !this.factura.cif) {
-      this.error = 'Empresa y CIF son obligatorios';
+    
+    // Validar campos obligatorios
+    if (!this.factura.codigo || !this.factura.fecha || !this.factura.empresa || !this.factura.cif) {
+      alert('Todos los campos son obligatorios');
       return;
     }
+
+    // Validar formato CIF (letra + 8 números)
+    if (!this.validarCIF(this.factura.cif)) {
+      alert('El CIF debe tener el formato: una letra seguida de 8 números (ej: A12345678)');
+      return;
+    }
+
+    // Validar base imponible > 0
+    if (this.factura.baseImponible <= 0) {
+      alert('La base imponible debe ser mayor que 0');
+      return;
+    }
+
     const existe: EmpresaDTO | undefined = this.empresas.find((e: EmpresaDTO) => e.nombre === this.factura.empresa);
     if (!existe) {
       this.empresasService.save(this.factura.empresa, this.factura.cif).subscribe();

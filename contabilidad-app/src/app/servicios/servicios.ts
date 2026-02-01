@@ -325,9 +325,34 @@ export class ServiciosListaComponent implements OnInit {
         this.successMessage = this.editingId ? '✅ Servicio actualizado' : '✅ Servicio añadido';
         this.showSuccessModal = true;
         this.showFormModal = false;
+        const idActualizado = this.editingId; // Guarda el ID para actualizar el modal
         this.editingId = null;
         this.cd.detectChanges();
-        this.cargarServicios();
+        
+        // Recarga servicios y actualiza el modal de detalle si estaba abierto
+        this.serviciosService
+          .list({ limit: this.limit, offset: this.offset, desde: this.desde || undefined, hasta: this.hasta || undefined })
+          .subscribe({
+            next: res => {
+              this.servicios = res.datos.map(s => ({
+                ...s,
+                importeFinal: Math.round(((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)) * 100) / 100
+              }));
+              this.ordenarServicios();
+              this.total = res.total;
+              this.suma = res.suma;
+              
+              // Actualiza el modal de detalle con los datos nuevos
+              if (idActualizado && this.servicioSeleccionado) {
+                const servicioActualizado = this.servicios.find(s => s.id === idActualizado);
+                if (servicioActualizado) {
+                  this.servicioSeleccionado = servicioActualizado;
+                }
+              }
+              this.cd.detectChanges();
+            }
+          });
+        
         setTimeout(() => {
           this.showSuccessModal = false;
           this.cd.detectChanges();

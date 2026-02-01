@@ -77,27 +77,33 @@
           <div class="modal-body">
             <form (ngSubmit)="guardarFactura()">
               <div class="mb-2">
-                <label class="form-label">Código</label>
+                <label class="form-label">Código *</label>
                 <input type="text" class="form-control" [(ngModel)]="factura.codigo" name="codigo" required>
+                <small class="text-danger" *ngIf="factura.codigo === ''">El código es obligatorio</small>
               </div>
               <div class="mb-2">
-                <label class="form-label">Fecha</label>
+                <label class="form-label">Fecha *</label>
                 <input type="date" class="form-control" [(ngModel)]="factura.fecha" name="fecha" required>
+                <small class="text-danger" *ngIf="factura.fecha === ''">La fecha es obligatoria</small>
               </div>
               <div class="mb-2">
-                <label class="form-label">Empresa</label>
+                <label class="form-label">Empresa *</label>
                 <input type="text" class="form-control" [(ngModel)]="factura.empresa" name="empresa" required (input)="buscarEmpresas(factura.empresa)" (change)="autocompletarCIF()">
                 <div *ngIf="empresasSugeridas.length > 0" class="list-group position-absolute w-100">
                   <button type="button" class="list-group-item list-group-item-action" *ngFor="let e of empresasSugeridas" (click)="factura.empresa = e.nombre; factura.cif = e.cif; empresasSugeridas = []">{{ e.nombre }} ({{ e.cif }})</button>
                 </div>
+                <small class="text-danger" *ngIf="factura.empresa === ''">La empresa es obligatoria</small>
               </div>
               <div class="mb-2">
-                <label class="form-label">CIF</label>
-                <input type="text" class="form-control" [(ngModel)]="factura.cif" name="cif" required>
+                <label class="form-label">CIF * (Formato: X00000000)</label>
+                <input type="text" class="form-control" [(ngModel)]="factura.cif" name="cif" required maxlength="9" style="text-transform: uppercase;">
+                <small class="text-danger" *ngIf="factura.cif === ''">El CIF es obligatorio</small>
+                <small class="text-danger" *ngIf="factura.cif !== '' && !validarCIF(factura.cif)">Formato incorrecto: debe ser una letra seguida de 8 números</small>
               </div>
               <div class="mb-2">
-                <label class="form-label">Base Imponible</label>
-                <input type="number" class="form-control" [(ngModel)]="factura.baseImponible" name="baseImponible" required (input)="calcularIVA()">
+                <label class="form-label">Base Imponible (€) *</label>
+                <input type="number" class="form-control" [(ngModel)]="factura.baseImponible" name="baseImponible" required (input)="calcularIVA()" min="0.01" step="0.01">
+                <small class="text-danger" *ngIf="factura.baseImponible <= 0">La base imponible debe ser mayor que 0</small>
               </div>
               <div class="mb-2">
                 <label class="form-label">IVA (%)</label>
