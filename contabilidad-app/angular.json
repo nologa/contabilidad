@@ -45,6 +45,11 @@
                 "glob": "manifest.webmanifest",
                 "input": "src",
                 "output": "/"
+              },
+              {
+                "glob": "_redirects",
+                "input": "./",
+                "output": "/"
               }
             ],
             "styles": [
