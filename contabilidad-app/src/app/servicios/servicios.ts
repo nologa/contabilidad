@@ -313,7 +313,7 @@ export class ServiciosListaComponent implements OnInit {
     if (this.servicio.descuento < 0 || this.servicio.descuento > 100) {
       alert('El descuento debe estar entre 0 y 100.');
       return;
-    }
+    } 
 
     console.log('Guardando con editingId:', this.editingId); // Debug
     const op = this.editingId != null
