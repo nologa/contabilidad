@@ -7,6 +7,13 @@ $card-border: #ffffff;
 $list-bg: #ffffff;
 $page-max: 1200px;
 
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: $accent;
+  margin-bottom: 1.5rem;
+}
+
 // Responsive width for .list-page
 .list-page {
   border: 1px solid $card-border;

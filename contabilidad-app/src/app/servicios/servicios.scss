@@ -69,6 +69,16 @@ h2 {
   border: 1px solid $card-border;
   border-radius: 0.65rem;
   background: $list-bg;
+  width: 100%;
+  max-width: $page-max;
+  margin: 0 auto;
+
+  @media (min-width: 992px) {
+    width: 80%;
+  }
+  @media (max-width: 991px) {
+    width: 100%;
+  }
 
   .card-body {
     padding: 1.25rem 1.35rem;
