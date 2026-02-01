@@ -24,8 +24,8 @@
       </div>
       <div class="col-12 col-md-auto">
         <label class="form-label">Mes</label>
-        <select class="form-select" [(ngModel)]="mesSeleccionado" (change)="cambiarMes()" [disabled]="!anoSeleccionado">
-          <option value="">Seleccionar mes</option>
+        <select class="form-select" [(ngModel)]="mesSeleccionado" (change)="cambiarMes()">
+          <option value="">Todos los meses</option>
           <option *ngFor="let m of meses" [value]="m.num">{{ m.nombre }}</option>
         </select>
       </div>

@@ -260,14 +260,22 @@ export class FacturasListaComponent implements OnInit {
   }
 
   cambiarMes(): void {
-    if (!this.anoSeleccionado || !this.mesSeleccionado) {
+    if (!this.anoSeleccionado) {
       this.filtroDesde = '';
       this.filtroHasta = '';
       return;
     }
-    this.filtroDesde = `${this.anoSeleccionado}-${this.mesSeleccionado}-01`;
-    const ultimoDia = new Date(parseInt(this.anoSeleccionado), parseInt(this.mesSeleccionado), 0).getDate();
-    this.filtroHasta = `${this.anoSeleccionado}-${this.mesSeleccionado}-${ultimoDia.toString().padStart(2, '0')}`;
+    
+    if (!this.mesSeleccionado) {
+      // Solo año seleccionado: mostrar todo el año
+      this.filtroDesde = `${this.anoSeleccionado}-01-01`;
+      this.filtroHasta = `${this.anoSeleccionado}-12-31`;
+    } else {
+      // Año y mes seleccionados: mostrar solo ese mes
+      this.filtroDesde = `${this.anoSeleccionado}-${this.mesSeleccionado}-01`;
+      const ultimoDia = new Date(parseInt(this.anoSeleccionado), parseInt(this.mesSeleccionado), 0).getDate();
+      this.filtroHasta = `${this.anoSeleccionado}-${this.mesSeleccionado}-${ultimoDia.toString().padStart(2, '0')}`;
+    }
     this.aplicarFiltro();
   }
 

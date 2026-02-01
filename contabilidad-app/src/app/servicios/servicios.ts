@@ -100,14 +100,22 @@ export class ServiciosListaComponent implements OnInit {
   }
 
   cambiarMes(): void {
-    if (!this.anoSeleccionado || !this.mesSeleccionado) {
+    if (!this.anoSeleccionado) {
       this.desde = '';
       this.hasta = '';
       return;
     }
-    this.desde = `${this.anoSeleccionado}-${this.mesSeleccionado}-01`;
-    const ultimoDia = new Date(parseInt(this.anoSeleccionado), parseInt(this.mesSeleccionado), 0).getDate();
-    this.hasta = `${this.anoSeleccionado}-${this.mesSeleccionado}-${ultimoDia.toString().padStart(2, '0')}`;
+    
+    if (!this.mesSeleccionado) {
+      // Solo año seleccionado: mostrar todo el año
+      this.desde = `${this.anoSeleccionado}-01-01`;
+      this.hasta = `${this.anoSeleccionado}-12-31`;
+    } else {
+      // Año y mes seleccionados: mostrar solo ese mes
+      this.desde = `${this.anoSeleccionado}-${this.mesSeleccionado}-01`;
+      const ultimoDia = new Date(parseInt(this.anoSeleccionado), parseInt(this.mesSeleccionado), 0).getDate();
+      this.hasta = `${this.anoSeleccionado}-${this.mesSeleccionado}-${ultimoDia.toString().padStart(2, '0')}`;
+    }
     this.aplicarFiltro();
   }
 
