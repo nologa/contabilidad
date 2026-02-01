@@ -39,41 +39,40 @@
     </div>
 
     @if (vistaTabla) {
-      <table class="table table-striped table-sm" *ngIf="facturas.length > 0">
-        <thead>
-          <tr>
-            <th class="text-center">Nº</th>
-            <th (click)="ordenarPor('fecha')" style="cursor:pointer">Fecha <span *ngIf="sortBy==='fecha'">{{ sortOrder==='asc'?'▲':'▼' }}</span></th>
-            <th>Código</th>
-            <th (click)="ordenarPor('empresa')" style="cursor:pointer">Empresa <span *ngIf="sortBy==='empresa'">{{ sortOrder==='asc'?'▲':'▼' }}</span></th>
-            <th>CIF</th>
-            <th class="text-end">Base Imponible</th>
-            <th class="text-end">IVA (%)</th>
-            <th class="text-end">IVA (€)</th>
-            <th class="text-end">Total</th>
-            <th class="text-center"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let f of facturas; let i = index">
-            <td class="text-center">{{ i + 1 }}</td>
-            <td>{{ f.fecha }}</td>
-            <td>{{ f.codigo }}</td>
-            <td>{{ f.empresa }}</td>
-            <td>{{ f.cif }}</td>
-            <td class="text-end">{{ f.baseImponible | number:'1.2-2':'es' }}</td>
-            <td class="text-end">{{ f.porcentajeIVA | number:'1.0-2':'es' }}</td>
-            <td class="text-end">{{ f.valorIVA | number:'1.2-2':'es' }}</td>
-            <td class="text-end">{{ f.total | number:'1.2-2':'es' }}</td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-info" (click)="abrirDetalle(f)">Ver</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p *ngIf="!loading && facturas.length === 0" class="alert alert-info mb-0">No hay facturas.</p>
-      <p *ngIf="loading" class="text-muted mb-0">Cargando...</p>
-    </div>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm" *ngIf="facturas.length > 0">
+          <thead>
+            <tr>
+              <th class="text-center">Nº</th>
+              <th (click)="ordenarPor('fecha')" style="cursor:pointer">Fecha <span *ngIf="sortBy==='fecha'">{{ sortOrder==='asc'?'▲':'▼' }}</span></th>
+              <th>Código</th>
+              <th (click)="ordenarPor('empresa')" style="cursor:pointer">Empresa <span *ngIf="sortBy==='empresa'">{{ sortOrder==='asc'?'▲':'▼' }}</span></th>
+              <th>CIF</th>
+              <th class="text-end">Base Imponible</th>
+              <th class="text-end">IVA (%)</th>
+              <th class="text-end">IVA (€)</th>
+              <th class="text-end">Total</th>
+              <th class="text-center"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of facturas; let i = index">
+              <td class="text-center">{{ i + 1 }}</td>
+              <td>{{ f.fecha }}</td>
+              <td>{{ f.codigo }}</td>
+              <td>{{ f.empresa }}</td>
+              <td>{{ f.cif }}</td>
+              <td class="text-end">{{ f.baseImponible | number:'1.2-2':'es' }}</td>
+              <td class="text-end">{{ f.porcentajeIVA | number:'1.0-2':'es' }}</td>
+              <td class="text-end">{{ f.valorIVA | number:'1.2-2':'es' }}</td>
+              <td class="text-end">{{ f.total | number:'1.2-2':'es' }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-info" (click)="abrirDetalle(f)">Ver</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     } @else {
       <div>
         @for (f of facturas; track f.codigo) {
@@ -92,6 +91,7 @@
         }
       </div>
     }
+
     <p *ngIf="!loading && facturas.length === 0" class="alert alert-info">No hay facturas.</p>
     <p *ngIf="loading" class="text-muted">Cargando...</p>
     @if (showFormModal) {
