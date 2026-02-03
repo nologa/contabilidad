@@ -10,7 +10,7 @@ import { RouterLink, Router, NavigationEnd } from '@angular/router';
   styleUrls: ['./header.scss']
 })
 export class HeaderComponent {
-  isLogin = false;
+  isLogin = true;
 
   constructor(private router: Router) {
     this.updateIsLogin();
@@ -20,7 +20,8 @@ export class HeaderComponent {
   }
 
   private updateIsLogin(): void {
-    this.isLogin = this.router.url.startsWith('/login');
+    const url = this.router.url;
+    this.isLogin = url.startsWith('/login') || url.startsWith('/forgot-password') || url.startsWith('/reset-password') || url === '/';
   }
 
   logout(): void {
