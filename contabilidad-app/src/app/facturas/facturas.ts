@@ -82,6 +82,7 @@ export class FacturasListaComponent implements OnInit {
   loading = false;
   error = '';
   datosPersonales: DatosPersonales | null = null;
+  guardando = false;
 
   exportarPDF(): void {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -358,6 +359,9 @@ export class FacturasListaComponent implements OnInit {
   }
 
   guardarFactura(): void {
+    if (this.guardando) {
+      return;
+    }
     this.calcularIVA();
     
     // Validar campos obligatorios
@@ -385,9 +389,17 @@ export class FacturasListaComponent implements OnInit {
     const op = this.editingId
       ? this.facturasService.update(this.editingId, this.factura)
       : this.facturasService.create(this.factura);
-    op.subscribe(() => {
-      this.showFormModal = false;
-      this.cargarFacturas();
+    this.guardando = true;
+    op.subscribe({
+      next: () => {
+        this.showFormModal = false;
+        this.cargarFacturas();
+        this.guardando = false;
+      },
+      error: () => {
+        this.guardando = false;
+        alert('No se pudo guardar la factura');
+      }
     });
   }
 }
