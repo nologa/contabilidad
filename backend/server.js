@@ -41,6 +41,13 @@ if (DB_TYPE === 'postgres') {
         descuento REAL NOT NULL,
         importeFinal REAL NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS ingresos (
+        id SERIAL PRIMARY KEY,
+        userId INTEGER NOT NULL REFERENCES users(id),
+        fecha TEXT NOT NULL,
+        x REAL NOT NULL,
+        y REAL NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS empresas (
         id SERIAL PRIMARY KEY,
         userId INTEGER NOT NULL,
@@ -105,6 +112,14 @@ if (DB_TYPE === 'postgres') {
       importe REAL NOT NULL,
       descuento REAL NOT NULL,
       importeFinal REAL NOT NULL,
+      FOREIGN KEY (userId) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS ingresos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      fecha TEXT NOT NULL,
+      x REAL NOT NULL,
+      y REAL NOT NULL,
       FOREIGN KEY (userId) REFERENCES users(id)
     );
     CREATE TABLE IF NOT EXISTS empresas (
@@ -707,6 +722,123 @@ app.post('/datosPersonales', auth, async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: 'Error al guardar datos personales' });
+  }
+});
+
+// ============= INGRESOS =============
+app.get('/ingresos', auth, async (req, res) => {
+  try {
+    const limit = Math.max(1, Number(req.query.limit) || 50);
+    const offset = Math.max(0, Number(req.query.offset) || 0);
+    const { desde, hasta } = req.query;
+
+    if (DB_TYPE === 'postgres') {
+      let where = 'userId = $1';
+      const params = [req.user.sub];
+      let idx = 2;
+      if (desde) { where += ` AND fecha >= $${idx}`; params.push(desde); idx++; }
+      if (hasta) { where += ` AND fecha <= $${idx}`; params.push(hasta); idx++; }
+      const total = (await pgPool.query(`SELECT COUNT(*) AS c FROM ingresos WHERE ${where}`, params)).rows[0].c;
+      const suma  = (await pgPool.query(`SELECT COALESCE(SUM(y - x),0) AS s FROM ingresos WHERE ${where}`, params)).rows[0].s;
+      const datos = (await pgPool.query(`SELECT * FROM ingresos WHERE ${where} ORDER BY fecha DESC, id DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset])).rows;
+      res.json({ datos, total, suma });
+    } else {
+      let where = 'userId = ?';
+      const params = [req.user.sub];
+      if (desde) { where += ' AND date(substr(fecha,1,10)) >= date(?)'; params.push(desde); }
+      if (hasta) { where += ' AND date(substr(fecha,1,10)) <= date(?)'; params.push(hasta); }
+      const total = db.prepare(`SELECT COUNT(*) AS c FROM ingresos WHERE ${where}`).get(...params).c;
+      const suma  = db.prepare(`SELECT COALESCE(SUM(y - x),0) AS s FROM ingresos WHERE ${where}`).get(...params).s;
+      const datos = db.prepare(`
+        SELECT * FROM ingresos WHERE ${where}
+        ORDER BY fecha DESC, id DESC LIMIT ? OFFSET ?
+      `).all(...params, limit, offset);
+      res.json({ datos, total, suma });
+    }
+  } catch (err) {
+    console.error('GET /ingresos', err);
+    res.status(500).json({ error: 'Error al obtener ingresos' });
+  }
+});
+
+app.post('/ingresos', auth, async (req, res) => {
+  try {
+    const { fecha, x, y } = req.body || {};
+    if (!fecha || x == null || y == null) {
+      return res.status(400).json({ error: 'Datos incompletos' });
+    }
+    if (Number(y) < Number(x)) {
+      return res.status(400).json({ error: 'Y no puede ser menor que X' });
+    }
+    if (DB_TYPE === 'postgres') {
+      const result = await pgPool.query(`INSERT INTO ingresos (userId, fecha, x, y) VALUES ($1,$2,$3,$4) RETURNING *`, [req.user.sub, fecha, x, y]);
+      res.status(201).json(result.rows[0]);
+    } else {
+      const info = db.prepare(`INSERT INTO ingresos (userId, fecha, x, y) VALUES (?, ?, ?, ?)`).run(req.user.sub, fecha, x, y);
+      const inserted = db.prepare('SELECT * FROM ingresos WHERE id = ?').get(info.lastInsertRowid);
+      res.status(201).json(inserted);
+    }
+  } catch (err) {
+    console.error('Error POST ingresos:', err.message);
+    res.status(500).json({ error: 'Error al guardar ingreso' });
+  }
+});
+
+app.get('/ingresos/:id', auth, async (req, res) => {
+  try {
+    let ingreso;
+    if (DB_TYPE === 'postgres') {
+      const result = await pgPool.query('SELECT * FROM ingresos WHERE id = $1 AND userId = $2', [req.params.id, req.user.sub]);
+      ingreso = result.rows[0];
+    } else {
+      ingreso = db.prepare('SELECT * FROM ingresos WHERE id = ? AND userId = ?').get(req.params.id, req.user.sub);
+    }
+    if (!ingreso) return res.status(404).json({ error: 'Ingreso no encontrado' });
+    res.json(ingreso);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener ingreso' });
+  }
+});
+
+app.put('/ingresos/:id', auth, async (req, res) => {
+  try {
+    const { fecha, x, y } = req.body || {};
+    if (!fecha || x == null || y == null) {
+      return res.status(400).json({ error: 'Datos incompletos' });
+    }
+    if (Number(y) < Number(x)) {
+      return res.status(400).json({ error: 'Y no puede ser menor que X' });
+    }
+    if (DB_TYPE === 'postgres') {
+      await pgPool.query(`UPDATE ingresos SET fecha=$1, x=$2, y=$3 WHERE id=$4 AND userId=$5`, [fecha, x, y, req.params.id, req.user.sub]);
+      const result = await pgPool.query('SELECT * FROM ingresos WHERE id = $1', [req.params.id]);
+      res.json(result.rows[0]);
+    } else {
+      db.prepare(`UPDATE ingresos SET fecha = ?, x = ?, y = ? WHERE id = ? AND userId = ?`).run(fecha, x, y, req.params.id, req.user.sub);
+      const updated = db.prepare('SELECT * FROM ingresos WHERE id = ?').get(req.params.id);
+      res.json(updated);
+    }
+  } catch (err) {
+    console.error('Error PUT ingresos:', err.message);
+    res.status(500).json({ error: 'Error al actualizar ingreso' });
+  }
+});
+
+app.delete('/ingresos/:id', auth, async (req, res) => {
+  try {
+    if (DB_TYPE === 'postgres') {
+      const result = await pgPool.query('SELECT * FROM ingresos WHERE id = $1 AND userId = $2', [req.params.id, req.user.sub]);
+      if (!result.rows[0]) return res.status(404).json({ error: 'Ingreso no encontrado' });
+      await pgPool.query('DELETE FROM ingresos WHERE id = $1 AND userId = $2', [req.params.id, req.user.sub]);
+      res.json({ message: 'Ingreso eliminado' });
+    } else {
+      const ingreso = db.prepare('SELECT * FROM ingresos WHERE id = ? AND userId = ?').get(req.params.id, req.user.sub);
+      if (!ingreso) return res.status(404).json({ error: 'Ingreso no encontrado' });
+      db.prepare('DELETE FROM ingresos WHERE id = ? AND userId = ?').run(req.params.id, req.user.sub);
+      res.json({ message: 'Ingreso eliminado' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar ingreso' });
   }
 });
 
