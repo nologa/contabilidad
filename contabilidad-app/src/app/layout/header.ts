@@ -21,7 +21,7 @@ export class HeaderComponent {
 
   private updateIsLogin(): void {
     const url = this.router.url;
-    this.isLogin = url.startsWith('/login') || url.startsWith('/forgot-password') || url.startsWith('/reset-password') || url === '/';
+    this.isLogin = url.startsWith('/login') || url.startsWith('/forgot-password') || url.startsWith('/reset-password');
   }
 
   logout(): void {
