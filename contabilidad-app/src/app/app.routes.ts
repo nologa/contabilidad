@@ -26,6 +26,11 @@ export const routes: Routes = [
     loadComponent: () => import('./mis-datos/mis-datos').then(m => m.MisDatosComponent),
     canActivate: [authGuard] 
   },
+  { 
+    path: 'ingresos', 
+    loadComponent: () => import('./ingresos/ingresos').then(m => m.IngresosComponent),
+    canActivate: [authGuard] 
+  },
   
   { path: '**', redirectTo: '' }
 ];

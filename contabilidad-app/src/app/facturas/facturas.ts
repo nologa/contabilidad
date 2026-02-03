@@ -89,10 +89,11 @@ export class FacturasListaComponent implements OnInit {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const margin = { left: 40, right: 40, top: 95, bottom: 60 };
     const pageWidth = doc.internal.pageSize.getWidth();
-    const head = [['Código', 'Fecha', 'Empresa', 'CIF', 'Base Imponible', '% IVA', 'Valor IVA', 'Total']];
-    const body = this.facturas.map(f => [
-      f.codigo ?? '',
+    const head = [['Nº', 'Fecha', 'Nº factura', 'Empresa', 'CIF', 'Base Imponible', 'IVA (%)', 'IVA (€)', 'Total']];
+    const body = this.facturas.map((f, i) => [
+      (i + 1).toString(),
       f.fecha ?? '',
+      f.codigo ?? '',
       f.empresa ?? '',
       f.cif ?? '',
       f.baseImponible ?? '',
@@ -109,7 +110,7 @@ export class FacturasListaComponent implements OnInit {
       margin,
       styles: { fontSize: 10, textColor: [0, 0, 0] },
       headStyles: { fillColor: [110, 193, 255], textColor: [0, 0, 0] },
-      columnStyles: { 4: { halign: 'right' }, 6: { halign: 'right' }, 7: { halign: 'right' } },
+      columnStyles: { 0: { halign: 'center' }, 5: { halign: 'right' }, 6: { halign: 'right' }, 7: { halign: 'right' }, 8: { halign: 'right' } },
       showFoot: 'everyPage',
       foot: [[
         { content: '', colSpan: 6, styles: { halign: 'left' } },
@@ -158,11 +159,14 @@ export class FacturasListaComponent implements OnInit {
         doc.setTextColor(0, 0, 0);
         doc.text('Listado de Facturas', margin.left, 40);
         doc.setFontSize(11);
-        doc.text('Rango: todas las fechas', margin.left, 58);
+        const rangoTexto = this.filtroDesde || this.filtroHasta 
+          ? `Rango: ${this.filtroDesde || 'sin fecha inicio'} a ${this.filtroHasta || 'sin fecha fin'}`
+          : 'Rango: todas las fechas';
+        doc.text(rangoTexto, margin.left, 58);
       },
       didDrawCell: (data: any) => {
         const p = data.pageNumber || doc.getCurrentPageInfo().pageNumber;
-        if (data.section === 'body' && data.column.index === 7) {
+        if (data.section === 'body' && data.column.index === 8) {
           const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
           const val = Number(txt.replace(/,/g, '.')) || 0;
           pageTotals[p] = (pageTotals[p] || 0) + val;
@@ -177,7 +181,7 @@ export class FacturasListaComponent implements OnInit {
           if (data.column.index === 0) {
             doc.text(`Total página: ${pageTotal.toFixed(2)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
           }
-          if (data.column.index === 6) {
+          if (data.column.index === 7) {
             doc.text(`Acumulado: ${cumTotals[p].toFixed(2)} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
               baseline: 'middle',
               align: 'right'

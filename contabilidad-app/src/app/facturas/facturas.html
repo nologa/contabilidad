@@ -59,7 +59,7 @@
             <tr>
               <th class="text-center">Nº</th>
               <th (click)="ordenarPor('fecha')" style="cursor:pointer">Fecha <span *ngIf="sortBy==='fecha'">{{ sortOrder==='asc'?'▲':'▼' }}</span></th>
-              <th>Código</th>
+              <th>Nº de factura</th>
               <th (click)="ordenarPor('empresa')" style="cursor:pointer">Empresa <span *ngIf="sortBy==='empresa'">{{ sortOrder==='asc'?'▲':'▼' }}</span></th>
               <th>CIF</th>
               <th class="text-end">Base Imponible</th>
@@ -118,9 +118,9 @@
           <div class="modal-body">
             <form (ngSubmit)="guardarFactura()">
               <div class="mb-2">
-                <label class="form-label">Código *</label>
+                <label class="form-label">Número de factura *</label>
                 <input type="text" class="form-control" [(ngModel)]="factura.codigo" name="codigo" required>
-                <small class="text-danger" *ngIf="factura.codigo === ''">El código es obligatorio</small>
+                <small class="text-danger" *ngIf="factura.codigo === ''">El nº de factura es obligatorio</small>
               </div>
               <div class="mb-2">
                 <label class="form-label">Fecha *</label>
@@ -175,7 +175,7 @@
             <button type="button" class="btn-close" (click)="cerrarDetalle()"></button>
           </div>
           <div class="modal-body">
-            <p><strong>Código:</strong> {{ facturaSeleccionada.codigo }}</p>
+            <p><strong>Nº de factura:</strong> {{ facturaSeleccionada.codigo }}</p>
             <p><strong>Fecha:</strong> {{ facturaSeleccionada.fecha }}</p>
             <p><strong>Empresa:</strong> {{ facturaSeleccionada.empresa }}</p>
             <p><strong>CIF:</strong> {{ facturaSeleccionada.cif }}</p>
