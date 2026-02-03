@@ -2,29 +2,36 @@
     <nav class="navbar navbar-expand-lg app-header" role="navigation" aria-label="Navegación principal">
         <div class="container-fluid">
             <h1>
-                <a class="navbar-brand" routerLink="/facturas" aria-label="Las cuentas de Agustín - Ir a inicio">Las cuentas de Agustín</a>
+                <a class="navbar-brand" routerLink="/facturas" aria-label="Las cuentas de Agustín - Ir a inicio">Las
+                    cuentas de Agustín</a>
             </h1>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appHeaderNav" aria-controls="appHeaderNav" aria-expanded="false" aria-label="Alternar menú de navegación">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appHeaderNav"
+                aria-controls="appHeaderNav" aria-expanded="false" aria-label="Alternar menú de navegación">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="appHeaderNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0 justify-content-end">
                     <li class="nav-item">
-                        <a class="nav-link" routerLink="/facturas" routerLinkActive="active" aria-label="Facturas">Facturas</a>
+                        <a class="nav-link" routerLink="/facturas" routerLinkActive="active"
+                            aria-label="Facturas">Facturas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" routerLink="/servicios" routerLinkActive="active" aria-label="Servicios">Servicios</a>
+                        <a class="nav-link" routerLink="/servicios" routerLinkActive="active"
+                            aria-label="Servicios">Servicios</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" routerLink="/mis-datos" routerLinkActive="active" aria-label="Mis datos personales">Mis Datos</a>
+                        <a class="nav-link" routerLink="/ingresos" routerLinkActive="active"
+                            aria-label="Ingresos">Ingresos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" routerLink="/ingresos" routerLinkActive="active" aria-label="Ingresos">Ingresos</a>
+                        <a class="nav-link" routerLink="/mis-datos" routerLinkActive="active"
+                            aria-label="Mis datos personales">Mis Datos</a>
                     </li>
-                    <li class="nav-item">                        <a class="nav-link" routerLink="/ingresos" routerLinkActive="active" aria-label="Ingresos">Ingresos</a>
-                    </li>
-                    <li class="nav-item">                        <button class="btn btn-danger btn-sm ms-lg-3" (click)="logout()" aria-label="Cerrar sesión">Salir</button>
+
+                    <li class="nav-item">
+                        <button class="btn btn-danger btn-sm ms-lg-3" (click)="logout()"
+                            aria-label="Cerrar sesión">Salir</button>
                     </li>
                 </ul>
             </div>
