@@ -109,8 +109,8 @@
     <p *ngIf="!loading && facturas.length === 0" class="alert alert-info">No hay facturas.</p>
     <p *ngIf="loading" class="text-muted">Cargando...</p>
     @if (showFormModal) {
-      <div class="modal-overlay" (click)="showFormModal = false">
-        <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-overlay" (click)="showFormModal = false" [attr.aria-busy]="guardando">
+        <div class="modal-card" (click)="$event.stopPropagation()" [class.is-busy]="guardando">
           <div class="modal-header">
             <h5 class="modal-title">{{ editingId ? 'Editar Factura' : 'Nueva Factura' }}</h5>
             <button type="button" class="btn-close" (click)="showFormModal = false"></button>

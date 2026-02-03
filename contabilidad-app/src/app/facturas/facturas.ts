@@ -7,6 +7,7 @@ import { Factura } from '../models/factura';
 import { DatosPersonalesService, DatosPersonales } from '../services/datos-personales.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-facturas',
@@ -362,23 +363,31 @@ export class FacturasListaComponent implements OnInit {
     if (this.guardando) {
       return;
     }
+    this.guardando = true;
+    this.cd.markForCheck();
     this.calcularIVA();
     
     // Validar campos obligatorios
     if (!this.factura.codigo || !this.factura.fecha || !this.factura.empresa || !this.factura.cif) {
       alert('Todos los campos son obligatorios');
+      this.guardando = false;
+      this.cd.markForCheck();
       return;
     }
 
     // Validar formato CIF (letra + 8 números)
     if (!this.validarCIF(this.factura.cif)) {
       alert('El CIF debe tener el formato: una letra seguida de 8 números (ej: A12345678)');
+      this.guardando = false;
+      this.cd.markForCheck();
       return;
     }
 
     // Validar base imponible > 0
     if (this.factura.baseImponible <= 0) {
       alert('La base imponible debe ser mayor que 0');
+      this.guardando = false;
+      this.cd.markForCheck();
       return;
     }
 
@@ -389,15 +398,17 @@ export class FacturasListaComponent implements OnInit {
     const op = this.editingId
       ? this.facturasService.update(this.editingId, this.factura)
       : this.facturasService.create(this.factura);
-    this.guardando = true;
-    op.subscribe({
+    op.pipe(
+      finalize(() => {
+        this.guardando = false;
+        this.cd.markForCheck();
+      })
+    ).subscribe({
       next: () => {
         this.showFormModal = false;
         this.cargarFacturas();
-        this.guardando = false;
       },
       error: () => {
-        this.guardando = false;
         alert('No se pudo guardar la factura');
       }
     });
