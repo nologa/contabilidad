@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FacturasService } from '../services/facturas.service';
@@ -10,10 +10,10 @@ import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-facturas',
-  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './facturas.html',
-  styleUrls: ['./facturas.scss']
+  styleUrls: ['./facturas.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FacturasListaComponent implements OnInit {
     facturaSeleccionada: Factura | null = null;
@@ -23,17 +23,30 @@ export class FacturasListaComponent implements OnInit {
     }
 
     editarFactura(f: Factura): void {
-      this.editingId = null; // Si tienes un id, pon f.id
+      this.editingId = f.id ?? this.obtenerIdPorCodigo(f.codigo);
       this.factura = { ...f };
       this.showFormModal = true;
       this.cerrarDetalle();
     }
 
-    borrarFactura(codigo: string): void {
-      // Implementa la lógica para borrar por código o id
-      // Ejemplo:
-      // this.facturasService.delete(codigo).subscribe(() => { ... })
-      this.cerrarDetalle();
+    borrarFactura(f: Factura): void {
+      const id = f.id ?? this.obtenerIdPorCodigo(f.codigo);
+      if (!id) {
+        alert('No se pudo identificar la factura a borrar');
+        return;
+      }
+      if (!confirm('¿Seguro que deseas borrar esta factura?')) {
+        return;
+      }
+      this.facturasService.delete(id).subscribe({
+        next: () => {
+          this.cerrarDetalle();
+          this.cargarFacturas();
+        },
+        error: () => {
+          alert('No se pudo borrar la factura');
+        }
+      });
     }
   filtroDesde: string = '';
   filtroHasta: string = '';
@@ -307,6 +320,11 @@ export class FacturasListaComponent implements OnInit {
     this.facturaSeleccionada = f;
     // Puedes mostrar un modal o una sección con los datos de facturaSeleccionada
     // Ejemplo: this.showDetalleModal = true;
+  }
+
+  private obtenerIdPorCodigo(codigo: string): number | null {
+    const encontrada = this.facturas.find(f => f.codigo === codigo && f.id != null);
+    return encontrada?.id ?? null;
   }
 
   calcularIVA(): void {

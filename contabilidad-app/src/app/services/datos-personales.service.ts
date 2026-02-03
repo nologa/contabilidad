@@ -35,7 +35,7 @@ export class DatosPersonalesService {
   guardar(datos: DatosPersonales): Observable<DatosPersonales> {
     console.log('[DatosPersonalesService] Enviando datos:', datos);
     console.log('[DatosPersonalesService] URL:', this.baseUrl);
-    console.log('[DatosPersonalesService] Token:', localStorage.getItem('token') ? 'Sí hay token' : 'NO HAY TOKEN');
+    console.log('[DatosPersonalesService] Token:', sessionStorage.getItem('token') ? 'Sí hay token' : 'NO HAY TOKEN');
     
     return this.http.post<DatosPersonales>(this.baseUrl, datos).pipe(
       tap(res => console.log('[DatosPersonalesService] Datos guardados:', res)),

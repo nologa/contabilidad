@@ -24,6 +24,7 @@ export class HeaderComponent {
   }
 
   logout(): void {
+    sessionStorage.removeItem('token');
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }

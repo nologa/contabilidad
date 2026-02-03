@@ -112,7 +112,7 @@
       <div class="modal-overlay" (click)="showFormModal = false">
         <div class="modal-card" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h5 class="modal-title">Nueva Factura</h5>
+            <h5 class="modal-title">{{ editingId ? 'Editar Factura' : 'Nueva Factura' }}</h5>
             <button type="button" class="btn-close" (click)="showFormModal = false"></button>
           </div>
           <div class="modal-body">
@@ -186,7 +186,7 @@
           </div>
           <div class="modal-footer">
             <button class="btn btn-primary" (click)="editarFactura(facturaSeleccionada)">Modificar</button>
-            <button class="btn btn-danger" (click)="borrarFactura(facturaSeleccionada.codigo)">Borrar</button>
+            <button class="btn btn-danger" (click)="borrarFactura(facturaSeleccionada)">Borrar</button>
             <button class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
           </div>
         </div>

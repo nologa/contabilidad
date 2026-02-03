@@ -3,13 +3,14 @@ import { LoginComponent } from './login/login';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password';
 import { ResetPasswordComponent } from './reset-password/reset-password';
 import { authGuard } from './guards/auth.guard';
+import { rootRedirectGuard } from './guards/root-redirect.guard';
 
 export const routes: Routes = [
+  { path: '', component: LoginComponent, canActivate: [rootRedirectGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   
-  // Lazy loading para módulos protegidos (se cargan bajo demanda)
   { 
     path: 'facturas', 
     loadComponent: () => import('./facturas/facturas').then(m => m.FacturasListaComponent),
@@ -26,6 +27,5 @@ export const routes: Routes = [
     canActivate: [authGuard] 
   },
   
-  { path: '', redirectTo: 'facturas', pathMatch: 'full' },
-  { path: '**', redirectTo: 'facturas' }
+  { path: '**', redirectTo: '' }
 ];

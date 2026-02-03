@@ -27,8 +27,9 @@ export class LoginComponent {
         
         const token = response.token || response.authorization || response.access_token;
         if (token) {
-          localStorage.setItem('token', token);
-          this.router.navigate(['']);
+          sessionStorage.setItem('token', token);
+          localStorage.removeItem('token');
+          this.router.navigate(['/servicios']);
         } else {
           this.error = 'No se recibió token del servidor';
           console.error('[Login] Respuesta sin token:', response);

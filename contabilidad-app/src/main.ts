@@ -15,7 +15,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 registerLocaleData(localeEs, 'es');
 
 export const authInterceptor = (req: HttpRequest<any>, next: HttpHandlerFn) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (token) {
     req = req.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
   }
