@@ -391,6 +391,13 @@ export class FacturasListaComponent implements OnInit {
       return;
     }
 
+    if (!this.editingId && this.existeDuplicada(this.factura)) {
+      alert('Ya existe una factura igual. No se puede duplicar.');
+      this.guardando = false;
+      this.cd.markForCheck();
+      return;
+    }
+
     const existe: EmpresaDTO | undefined = this.empresas.find((e: EmpresaDTO) => e.nombre === this.factura.empresa);
     if (!existe) {
       this.empresasService.save(this.factura.empresa, this.factura.cif).subscribe();
@@ -411,6 +418,37 @@ export class FacturasListaComponent implements OnInit {
       error: () => {
         alert('No se pudo guardar la factura');
       }
+    });
+  }
+
+  private existeDuplicada(f: Factura): boolean {
+    const codigo = (f.codigo || '').trim().toLowerCase();
+    const fecha = (f.fecha || '').trim();
+    const empresa = (f.empresa || '').trim().toLowerCase();
+    const cif = (f.cif || '').trim().toUpperCase();
+    const base = Number(f.baseImponible || 0);
+    const iva = Number(f.porcentajeIVA || 0);
+    const valorIva = Number(f.valorIVA || 0);
+    const total = Number(f.total || 0);
+
+    return this.facturas.some(x => {
+      const xCodigo = (x.codigo || '').trim().toLowerCase();
+      const xFecha = (x.fecha || '').trim();
+      const xEmpresa = (x.empresa || '').trim().toLowerCase();
+      const xCif = (x.cif || '').trim().toUpperCase();
+      const xBase = Number(x.baseImponible || 0);
+      const xIva = Number(x.porcentajeIVA || 0);
+      const xValorIva = Number(x.valorIVA || 0);
+      const xTotal = Number(x.total || 0);
+
+      return xCodigo === codigo &&
+        xFecha === fecha &&
+        xEmpresa === empresa &&
+        xCif === cif &&
+        xBase === base &&
+        xIva === iva &&
+        xValorIva === valorIva &&
+        xTotal === total;
     });
   }
 }
