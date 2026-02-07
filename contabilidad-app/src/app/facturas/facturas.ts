@@ -89,6 +89,8 @@ export class FacturasListaComponent implements OnInit {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const margin = { left: 40, right: 40, top: 95, bottom: 60 };
     const pageWidth = doc.internal.pageSize.getWidth();
+    const fmtEuro = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const parseEuro = (s: string) => Number(String(s).replace(/\./g, '').replace(',', '.')) || 0;
     const head = [['Nº', 'Fecha', 'Nº factura', 'Empresa', 'CIF', 'Base Imponible', 'IVA (%)', 'IVA (€)', 'Total']];
     const body = this.facturas.map((f, i) => [
       (i + 1).toString(),
@@ -96,10 +98,10 @@ export class FacturasListaComponent implements OnInit {
       f.codigo ?? '',
       f.empresa ?? '',
       f.cif ?? '',
-      f.baseImponible ?? '',
+      fmtEuro(Number(f.baseImponible ?? 0)),
       f.porcentajeIVA ?? '',
-      f.valorIVA ?? '',
-      f.total ?? ''
+      fmtEuro(Number(f.valorIVA ?? 0)),
+      fmtEuro(Number(f.total ?? 0))
     ]);
     const pageTotals: Record<number, number> = {};
     const cumTotals: Record<number, number> = {};
@@ -168,7 +170,7 @@ export class FacturasListaComponent implements OnInit {
         const p = data.pageNumber || doc.getCurrentPageInfo().pageNumber;
         if (data.section === 'body' && data.column.index === 8) {
           const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
-          const val = Number(txt.replace(/,/g, '.')) || 0;
+          const val = parseEuro(txt);
           pageTotals[p] = (pageTotals[p] || 0) + val;
         }
         if (data.section === 'foot') {
@@ -179,10 +181,10 @@ export class FacturasListaComponent implements OnInit {
           doc.setFontSize(10);
           doc.setTextColor(0, 0, 0);
           if (data.column.index === 0) {
-            doc.text(`Total página: ${pageTotal.toFixed(2)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
+            doc.text(`Total página: ${fmtEuro(pageTotal)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
           }
-          if (data.column.index === 7) {
-            doc.text(`Acumulado: ${cumTotals[p].toFixed(2)} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
+          if (data.column.index === 6) {
+            doc.text(`Acumulado: ${fmtEuro(cumTotals[p])} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
               baseline: 'middle',
               align: 'right'
             });

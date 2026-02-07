@@ -71,8 +71,8 @@ export class IngresosComponent implements OnInit {
   sortBy: 'fecha' = 'fecha';
   sortOrder: 'asc' | 'desc' = 'desc';
   vistaTabla = true;
-  totalIngresos = 0;
-  sumaTotal = 0;
+  totalServicios = 0;
+  totalServiciosEuros = 0;
   ingresos: Ingreso[] = [];
   ingreso: Ingreso = { fecha: '', x: 0, y: 0, servicios: 0 };
   showFormModal = false;
@@ -86,17 +86,23 @@ export class IngresosComponent implements OnInit {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const margin = { left: 40, right: 40, top: 95, bottom: 60 };
     const pageWidth = doc.internal.pageSize.getWidth();
+    const fmtEuro = (n: number) => n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtInt = (n: number) => Math.round(n).toLocaleString('es-ES', { maximumFractionDigits: 0 });
+    const parseEuro = (s: string) => Number(String(s).replace(/\./g, '').replace(',', '.')) || 0;
+    const parseIntEs = (s: string) => Number(String(s).replace(/\./g, '')) || 0;
     const head = [['Nº', 'Fecha', 'X', 'Y', 'Servicios', 'Total']];
     const body = this.ingresos.map((i, idx) => [
       (idx + 1).toString(),
       i.fecha ?? '',
-      i.x ?? '',
-      i.y ?? '',
-      i.servicios ?? '',
-      (i.y - i.x).toString()
+      fmtEuro(Number(i.x ?? 0)),
+      fmtEuro(Number(i.y ?? 0)),
+      fmtInt(Number(i.servicios ?? 0)),
+      fmtEuro(Number(i.y ?? 0) - Number(i.x ?? 0))
     ]);
-    const pageTotals: Record<number, number> = {};
-    const cumTotals: Record<number, number> = {};
+    const pageTotalsServicios: Record<number, number> = {};
+    const cumTotalsServicios: Record<number, number> = {};
+    const pageTotalsEuros: Record<number, number> = {};
+    const cumTotalsEuros: Record<number, number> = {};
 
     autoTable(doc, {
       head,
@@ -140,21 +146,40 @@ export class IngresosComponent implements OnInit {
         const p = data.pageNumber || doc.getCurrentPageInfo().pageNumber;
         if (data.section === 'body' && data.column.index === 4) {
           const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
-          const val = Number(txt.replace(/,/g, '.')) || 0;
-          pageTotals[p] = (pageTotals[p] || 0) + val;
+          const val = parseIntEs(txt);
+          pageTotalsServicios[p] = (pageTotalsServicios[p] || 0) + val;
+        }
+        if (data.section === 'body' && data.column.index === 5) {
+          const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
+          const val = parseEuro(txt);
+          pageTotalsEuros[p] = (pageTotalsEuros[p] || 0) + val;
         }
         if (data.section === 'foot') {
-          const prev = p > 1 ? (cumTotals[p - 1] || 0) : 0;
-          const pageTotal = pageTotals[p] || 0;
-          cumTotals[p] = prev + pageTotal;
+          const prevServicios = p > 1 ? (cumTotalsServicios[p - 1] || 0) : 0;
+          const pageTotalServicios = pageTotalsServicios[p] || 0;
+          cumTotalsServicios[p] = prevServicios + pageTotalServicios;
+
+          const prevEuros = p > 1 ? (cumTotalsEuros[p - 1] || 0) : 0;
+          const pageTotalEuros = pageTotalsEuros[p] || 0;
+          cumTotalsEuros[p] = prevEuros + pageTotalEuros;
+
           const { cell } = data;
           doc.setFontSize(10);
           doc.setTextColor(0, 0, 0);
           if (data.column.index === 0) {
-            doc.text(`Total página: ${pageTotal.toFixed(2)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
+            const y1 = cell.y + cell.height / 2 - 5;
+            const y2 = cell.y + cell.height / 2 + 8;
+            doc.text(`Servicios página: ${fmtInt(pageTotalServicios)}`, cell.x + 6, y1, { baseline: 'middle' });
+            doc.text(`Total página: ${fmtEuro(pageTotalEuros)} €`, cell.x + 6, y2, { baseline: 'middle' });
           }
           if (data.column.index === 4) {
-            doc.text(`Acumulado: ${cumTotals[p].toFixed(2)} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
+            const y1 = cell.y + cell.height / 2 - 5;
+            const y2 = cell.y + cell.height / 2 + 8;
+            doc.text(`Servicios acumulado: ${fmtInt(cumTotalsServicios[p])}`, cell.x + cell.width - 6, y1, {
+              baseline: 'middle',
+              align: 'right'
+            });
+            doc.text(`Acumulado: ${fmtEuro(cumTotalsEuros[p])} €`, cell.x + cell.width - 6, y2, {
               baseline: 'middle',
               align: 'right'
             });
@@ -185,7 +210,7 @@ export class IngresosComponent implements OnInit {
       next: res => {
         let lista = (res.datos as any[]).map((i: any) => ({
           ...i,
-          servicios: i.servicios ?? 0,
+          servicios: Number(i.servicios ?? 0),
           total: i.y - i.x
         }));
 
@@ -211,8 +236,8 @@ export class IngresosComponent implements OnInit {
         });
 
         this.ingresos = lista;
-        this.totalIngresos = lista.length;
-        this.sumaTotal = lista.reduce((acc, i) => acc + (i.servicios || 0), 0);
+        this.totalServicios = lista.reduce((acc, i) => acc + (i.servicios || 0), 0);
+        this.totalServiciosEuros = lista.reduce((acc, i) => acc + (i.total || 0), 0);
         this.loading = false;
         this.cd.detectChanges();
       },
@@ -300,8 +325,15 @@ export class IngresosComponent implements OnInit {
       return;
     }
 
-    if (this.ingreso.servicios < 0) {
+    const serviciosNum = Number(this.ingreso.servicios);
+    if (serviciosNum < 0) {
       alert('Servicios no puede ser menor que 0');
+      this.guardando = false;
+      this.cd.markForCheck();
+      return;
+    }
+    if (!Number.isInteger(serviciosNum)) {
+      alert('Servicios debe ser un número entero');
       this.guardando = false;
       this.cd.markForCheck();
       return;
