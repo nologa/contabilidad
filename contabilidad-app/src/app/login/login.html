@@ -9,8 +9,8 @@
       @if (error) {
         <div class="alert alert-danger">{{ error }}</div>
       }
-      <p>Servicio en mantenimiento. Disculpe las molestias</p>
-       <!-- <form (ngSubmit)="login()">
+      <!-- <p>Servicio en mantenimiento. Disculpe las molestiasNº de servicios: 3Total servicios: 13</p> -->
+       <form (ngSubmit)="login()">
         <div class="mb-3"> 
           <label class="form-label">Email</label>
           <input type="email" class="form-control" [(ngModel)]="email" name="email" required autocomplete="email">
@@ -21,7 +21,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Entrar</button>
-      </form>  -->
+      </form>  
 
       <div class="text-center mt-3">
         <a routerLink="/forgot-password" class="text-decoration-none">
