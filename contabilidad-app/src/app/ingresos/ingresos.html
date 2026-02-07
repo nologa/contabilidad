@@ -57,6 +57,7 @@
               <th (click)="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'" style="cursor:pointer">Fecha <span>{{ sortOrder === 'asc' ? '▲' : '▼' }}</span></th>
               <th class="text-end">X</th>
               <th class="text-end">Y</th>
+              <th class="text-end">Servicios</th>
               <th class="text-end">Total</th>
               <th class="text-center"></th>
             </tr>
@@ -67,6 +68,7 @@
               <td>{{ i.fecha }}</td>
               <td class="text-end">{{ i.x | number:'1.2-2':'es' }}</td>
               <td class="text-end">{{ i.y | number:'1.2-2':'es' }}</td>
+              <td class="text-end">{{ i.servicios | number:'1.2-2':'es' }}</td>
               <td class="text-end">{{ (i.y - i.x) | number:'1.2-2':'es' }}</td>
               <td class="text-center">
                 <button class="btn btn-sm btn-info" (click)="abrirDetalle(i)">Ver</button>
@@ -83,6 +85,7 @@
               <p class="card-text mb-1"><strong>Fecha:</strong> {{ i.fecha }}</p>
               <p class="card-text mb-1"><strong>X:</strong> {{ i.x | number:'1.2-2':'es' }} €</p>
               <p class="card-text mb-1"><strong>Y:</strong> {{ i.y | number:'1.2-2':'es' }} €</p>
+              <p class="card-text mb-1"><strong>Servicios:</strong> {{ i.servicios | number:'1.2-2':'es' }} €</p>
               <p class="card-text mb-0"><strong>Total:</strong> {{ (i.y - i.x) | number:'1.2-2':'es' }} €</p>
               <button class="btn btn-sm btn-info mt-2" (click)="abrirDetalle(i)">Ver</button>
             </div>
@@ -119,6 +122,11 @@
                 <small class="text-danger" *ngIf="(ingreso.y || 0) < (ingreso.x || 0)">Y no puede ser menor que X</small>
               </div>
               <div class="mb-2">
+                <label class="form-label">Servicios *</label>
+                <input type="number" class="form-control" [(ngModel)]="ingreso.servicios" name="servicios" required step="0.01" min="0">
+                <small class="text-danger" *ngIf="(ingreso.servicios || 0) < 0">Servicios debe ser mayor o igual a 0</small>
+              </div>
+              <div class="mb-2">
                 <label class="form-label">Total</label>
                 <input type="number" class="form-control bg-light" [value]="(ingreso.y || 0) - (ingreso.x || 0)" readonly>
               </div>
@@ -143,6 +151,7 @@
             <p><strong>Fecha:</strong> {{ ingresoSeleccionado.fecha }}</p>
             <p><strong>X:</strong> {{ ingresoSeleccionado.x | number:'1.2-2':'es' }} €</p>
             <p><strong>Y:</strong> {{ ingresoSeleccionado.y | number:'1.2-2':'es' }} €</p>
+            <p><strong>Servicios:</strong> {{ ingresoSeleccionado.servicios | number:'1.2-2':'es' }} €</p>
             <p><strong>Total:</strong> {{ (ingresoSeleccionado.y - ingresoSeleccionado.x) | number:'1.2-2':'es' }} €</p>
           </div>
           <div class="modal-footer">

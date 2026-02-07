@@ -3,5 +3,6 @@ export interface Ingreso {
   fecha: string;
   x: number;
   y: number;
+  servicios: number;
   total?: number;
 }

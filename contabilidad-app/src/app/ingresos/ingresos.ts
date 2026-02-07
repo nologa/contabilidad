@@ -74,7 +74,7 @@ export class IngresosComponent implements OnInit {
   totalIngresos = 0;
   sumaTotal = 0;
   ingresos: Ingreso[] = [];
-  ingreso: Ingreso = { fecha: '', x: 0, y: 0 };
+  ingreso: Ingreso = { fecha: '', x: 0, y: 0, servicios: 0 };
   showFormModal = false;
   editingId: number | null = null;
   loading = false;
@@ -86,12 +86,13 @@ export class IngresosComponent implements OnInit {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const margin = { left: 40, right: 40, top: 95, bottom: 60 };
     const pageWidth = doc.internal.pageSize.getWidth();
-    const head = [['Nº', 'Fecha', 'X', 'Y', 'Total']];
+    const head = [['Nº', 'Fecha', 'X', 'Y', 'Servicios', 'Total']];
     const body = this.ingresos.map((i, idx) => [
       (idx + 1).toString(),
       i.fecha ?? '',
       i.x ?? '',
       i.y ?? '',
+      i.servicios ?? '',
       (i.y - i.x).toString()
     ]);
     const pageTotals: Record<number, number> = {};
@@ -104,10 +105,10 @@ export class IngresosComponent implements OnInit {
       margin,
       styles: { fontSize: 10, textColor: [0, 0, 0] },
       headStyles: { fillColor: [110, 193, 255], textColor: [0, 0, 0] },
-      columnStyles: { 0: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+      columnStyles: { 0: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } },
       showFoot: 'everyPage',
       foot: [[
-        { content: '', colSpan: 3, styles: { halign: 'left' } },
+        { content: '', colSpan: 4, styles: { halign: 'left' } },
         { content: '', colSpan: 2, styles: { halign: 'right' } }
       ]],
       footStyles: { fillColor: [240, 240, 240] },
@@ -152,7 +153,7 @@ export class IngresosComponent implements OnInit {
           if (data.column.index === 0) {
             doc.text(`Total página: ${pageTotal.toFixed(2)} €`, cell.x + 6, cell.y + cell.height / 2, { baseline: 'middle' });
           }
-          if (data.column.index === 3) {
+          if (data.column.index === 4) {
             doc.text(`Acumulado: ${cumTotals[p].toFixed(2)} €`, cell.x + cell.width - 6, cell.y + cell.height / 2, {
               baseline: 'middle',
               align: 'right'
@@ -184,6 +185,7 @@ export class IngresosComponent implements OnInit {
       next: res => {
         let lista = (res.datos as any[]).map((i: any) => ({
           ...i,
+          servicios: i.servicios ?? 0,
           total: i.y - i.x
         }));
 
@@ -210,7 +212,7 @@ export class IngresosComponent implements OnInit {
 
         this.ingresos = lista;
         this.totalIngresos = lista.length;
-        this.sumaTotal = lista.reduce((acc, i) => acc + (i.total || 0), 0);
+        this.sumaTotal = lista.reduce((acc, i) => acc + (i.servicios || 0), 0);
         this.loading = false;
         this.cd.detectChanges();
       },
@@ -264,7 +266,7 @@ export class IngresosComponent implements OnInit {
 
   abrirNueva(): void {
     this.editingId = null;
-    this.ingreso = { fecha: '', x: 0, y: 0 };
+    this.ingreso = { fecha: '', x: 0, y: 0, servicios: 0 };
     this.showFormModal = true;
   }
 
@@ -284,7 +286,7 @@ export class IngresosComponent implements OnInit {
     this.guardando = true;
     this.cd.markForCheck();
 
-    if (!this.ingreso.fecha || this.ingreso.x == null || this.ingreso.y == null) {
+    if (!this.ingreso.fecha || this.ingreso.x == null || this.ingreso.y == null || this.ingreso.servicios == null) {
       alert('Todos los campos son obligatorios');
       this.guardando = false;
       this.cd.markForCheck();
@@ -293,6 +295,13 @@ export class IngresosComponent implements OnInit {
 
     if (this.ingreso.y < this.ingreso.x) {
       alert('Y no puede ser menor que X');
+      this.guardando = false;
+      this.cd.markForCheck();
+      return;
+    }
+
+    if (this.ingreso.servicios < 0) {
+      alert('Servicios no puede ser menor que 0');
       this.guardando = false;
       this.cd.markForCheck();
       return;
