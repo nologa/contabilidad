@@ -46,7 +46,8 @@ if (DB_TYPE === 'postgres') {
         userId INTEGER NOT NULL REFERENCES users(id),
         fecha TEXT NOT NULL,
         x REAL NOT NULL,
-        y REAL NOT NULL
+        y REAL NOT NULL,
+        servicios REAL NOT NULL DEFAULT 0
       );
       CREATE TABLE IF NOT EXISTS empresas (
         id SERIAL PRIMARY KEY,
@@ -79,6 +80,7 @@ if (DB_TYPE === 'postgres') {
       );
       CREATE INDEX IF NOT EXISTS idx_empresas_user_nombre ON empresas(userId, nombre);
     `);
+    await pgPool.query('ALTER TABLE ingresos ADD COLUMN IF NOT EXISTS servicios REAL NOT NULL DEFAULT 0');
   })();
 } else {
   // --- SQLITE (local por defecto) ---
@@ -120,6 +122,7 @@ if (DB_TYPE === 'postgres') {
       fecha TEXT NOT NULL,
       x REAL NOT NULL,
       y REAL NOT NULL,
+      servicios REAL NOT NULL DEFAULT 0,
       FOREIGN KEY (userId) REFERENCES users(id)
     );
     CREATE TABLE IF NOT EXISTS empresas (
@@ -155,6 +158,10 @@ if (DB_TYPE === 'postgres') {
     );
   `);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_empresas_user_nombre ON empresas(userId, nombre);`);
+  const ingresosCols = db.prepare('PRAGMA table_info(ingresos)').all();
+  if (!ingresosCols.some(c => c.name === 'servicios')) {
+    db.exec('ALTER TABLE ingresos ADD COLUMN servicios REAL NOT NULL DEFAULT 0');
+  }
 }
 
 const SECRET = process.env.JWT_SECRET || 'cambia-esto';
@@ -739,7 +746,7 @@ app.get('/ingresos', auth, async (req, res) => {
       if (desde) { where += ` AND fecha >= $${idx}`; params.push(desde); idx++; }
       if (hasta) { where += ` AND fecha <= $${idx}`; params.push(hasta); idx++; }
       const total = (await pgPool.query(`SELECT COUNT(*) AS c FROM ingresos WHERE ${where}`, params)).rows[0].c;
-      const suma  = (await pgPool.query(`SELECT COALESCE(SUM(y - x),0) AS s FROM ingresos WHERE ${where}`, params)).rows[0].s;
+      const suma  = (await pgPool.query(`SELECT COALESCE(SUM(servicios),0) AS s FROM ingresos WHERE ${where}`, params)).rows[0].s;
       const datos = (await pgPool.query(`SELECT * FROM ingresos WHERE ${where} ORDER BY fecha DESC, id DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset])).rows;
       res.json({ datos, total, suma });
     } else {
@@ -748,7 +755,7 @@ app.get('/ingresos', auth, async (req, res) => {
       if (desde) { where += ' AND date(substr(fecha,1,10)) >= date(?)'; params.push(desde); }
       if (hasta) { where += ' AND date(substr(fecha,1,10)) <= date(?)'; params.push(hasta); }
       const total = db.prepare(`SELECT COUNT(*) AS c FROM ingresos WHERE ${where}`).get(...params).c;
-      const suma  = db.prepare(`SELECT COALESCE(SUM(y - x),0) AS s FROM ingresos WHERE ${where}`).get(...params).s;
+      const suma  = db.prepare(`SELECT COALESCE(SUM(servicios),0) AS s FROM ingresos WHERE ${where}`).get(...params).s;
       const datos = db.prepare(`
         SELECT * FROM ingresos WHERE ${where}
         ORDER BY fecha DESC, id DESC LIMIT ? OFFSET ?
@@ -763,18 +770,21 @@ app.get('/ingresos', auth, async (req, res) => {
 
 app.post('/ingresos', auth, async (req, res) => {
   try {
-    const { fecha, x, y } = req.body || {};
-    if (!fecha || x == null || y == null) {
+    const { fecha, x, y, servicios } = req.body || {};
+    if (!fecha || x == null || y == null || servicios == null) {
       return res.status(400).json({ error: 'Datos incompletos' });
     }
     if (Number(y) < Number(x)) {
       return res.status(400).json({ error: 'Y no puede ser menor que X' });
     }
+    if (Number(servicios) < 0) {
+      return res.status(400).json({ error: 'Servicios no puede ser menor que 0' });
+    }
     if (DB_TYPE === 'postgres') {
-      const result = await pgPool.query(`INSERT INTO ingresos (userId, fecha, x, y) VALUES ($1,$2,$3,$4) RETURNING *`, [req.user.sub, fecha, x, y]);
+      const result = await pgPool.query(`INSERT INTO ingresos (userId, fecha, x, y, servicios) VALUES ($1,$2,$3,$4,$5) RETURNING *`, [req.user.sub, fecha, x, y, servicios]);
       res.status(201).json(result.rows[0]);
     } else {
-      const info = db.prepare(`INSERT INTO ingresos (userId, fecha, x, y) VALUES (?, ?, ?, ?)`).run(req.user.sub, fecha, x, y);
+      const info = db.prepare(`INSERT INTO ingresos (userId, fecha, x, y, servicios) VALUES (?, ?, ?, ?, ?)`).run(req.user.sub, fecha, x, y, servicios);
       const inserted = db.prepare('SELECT * FROM ingresos WHERE id = ?').get(info.lastInsertRowid);
       res.status(201).json(inserted);
     }
@@ -802,19 +812,22 @@ app.get('/ingresos/:id', auth, async (req, res) => {
 
 app.put('/ingresos/:id', auth, async (req, res) => {
   try {
-    const { fecha, x, y } = req.body || {};
-    if (!fecha || x == null || y == null) {
+    const { fecha, x, y, servicios } = req.body || {};
+    if (!fecha || x == null || y == null || servicios == null) {
       return res.status(400).json({ error: 'Datos incompletos' });
     }
     if (Number(y) < Number(x)) {
       return res.status(400).json({ error: 'Y no puede ser menor que X' });
     }
+    if (Number(servicios) < 0) {
+      return res.status(400).json({ error: 'Servicios no puede ser menor que 0' });
+    }
     if (DB_TYPE === 'postgres') {
-      await pgPool.query(`UPDATE ingresos SET fecha=$1, x=$2, y=$3 WHERE id=$4 AND userId=$5`, [fecha, x, y, req.params.id, req.user.sub]);
+      await pgPool.query(`UPDATE ingresos SET fecha=$1, x=$2, y=$3, servicios=$4 WHERE id=$5 AND userId=$6`, [fecha, x, y, servicios, req.params.id, req.user.sub]);
       const result = await pgPool.query('SELECT * FROM ingresos WHERE id = $1', [req.params.id]);
       res.json(result.rows[0]);
     } else {
-      db.prepare(`UPDATE ingresos SET fecha = ?, x = ?, y = ? WHERE id = ? AND userId = ?`).run(fecha, x, y, req.params.id, req.user.sub);
+      db.prepare(`UPDATE ingresos SET fecha = ?, x = ?, y = ?, servicios = ? WHERE id = ? AND userId = ?`).run(fecha, x, y, servicios, req.params.id, req.user.sub);
       const updated = db.prepare('SELECT * FROM ingresos WHERE id = ?').get(req.params.id);
       res.json(updated);
     }
