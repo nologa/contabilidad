@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contabilidad - Accountability Tracker</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Contabilidad</h1>
+            <p class="subtitle">Your Personal Accountability Tracker</p>
+        </header>
+
+        <main>
+            <!-- Create Goal Section -->
+            <section class="create-goal">
+                <h2>Create New Goal</h2>
+                <form id="goalForm">
+                    <div class="form-group">
+                        <label for="goalTitle">Goal Title *</label>
+                        <input type="text" id="goalTitle" required placeholder="e.g., Learn Spanish">
+                    </div>
+                    <div class="form-group">
+                        <label for="goalDescription">Description</label>
+                        <textarea id="goalDescription" rows="3" placeholder="Describe your goal..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="goalTargetDate">Target Date</label>
+                        <input type="date" id="goalTargetDate">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Goal</button>
+                </form>
+            </section>
+
+            <!-- Goals List Section -->
+            <section class="goals-list">
+                <h2>My Goals</h2>
+                <div id="goalsContainer">
+                    <p class="empty-state">No goals yet. Create your first goal above!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Goal Detail Modal -->
+    <div id="goalModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalGoalTitle"></h2>
+            <p id="modalGoalDescription"></p>
+            <p id="modalGoalTarget"></p>
+            
+            <div class="modal-section">
+                <h3>Tasks</h3>
+                <form id="taskForm" class="inline-form">
+                    <input type="text" id="taskTitle" placeholder="Add a new task..." required>
+                    <button type="submit" class="btn btn-small">Add</button>
+                </form>
+                <ul id="tasksList"></ul>
+            </div>
+
+            <div class="modal-section">
+                <h3>Progress Log</h3>
+                <form id="logForm" class="inline-form">
+                    <input type="text" id="logNote" placeholder="Add a progress note..." required>
+                    <button type="submit" class="btn btn-small">Log</button>
+                </form>
+                <ul id="logsList"></ul>
+            </div>
+
+            <div class="modal-actions">
+                <button id="completeGoalBtn" class="btn btn-success">Mark Complete</button>
+                <button id="deleteGoalBtn" class="btn btn-danger">Delete Goal</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
