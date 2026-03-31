@@ -270,14 +270,15 @@ export class ServiciosListaComponent implements OnInit {
         : 'Rango: todas las fechas';
     doc.text(rango, margin.left, 58);
 
-    const head = [['Nº', 'Código', 'Fecha', 'Importe €', 'Descuento', 'Final €']];
+    const head = [['Nº', 'Código', 'Fecha', 'Importe €', 'Descuento', 'Final €', 'Tarjeta']];
     const body = this.servicios.map((s, i) => [
       (i + 1).toString(),
       s.codigo,
       s.fecha,
       this.fmt(s.importe ?? 0),
       `${s.descuento ?? 0}`,
-      this.fmt(s.importeFinal ?? ((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)))
+      this.fmt(s.importeFinal ?? ((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100))),
+      s.tarjeta ? '✔️' : ''
     ]);
 
     const pageTotals: Record<number, number> = {};
@@ -290,7 +291,7 @@ export class ServiciosListaComponent implements OnInit {
       margin,
       styles: { fontSize: 10, textColor: [0, 0, 0] },
       headStyles: { fillColor: [110, 193, 255], textColor: [0, 0, 0] },
-      columnStyles: { 3: { halign: 'right' }, 5: { halign: 'right' } },
+      columnStyles: { 3: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'center' } },
       showFoot: 'everyPage',
       foot: [[
         { content: '', colSpan: 4, styles: { halign: 'left' } },
