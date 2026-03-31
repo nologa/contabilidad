@@ -10,12 +10,13 @@ export class ServiciosService {
 
   constructor(private http: HttpClient) {}
 
-  list(params: { limit?: number; offset?: number; desde?: string; hasta?: string } = {}): Observable<{ datos: Servicio[]; total: number; suma: number }> {
+  list(params: { limit?: number; offset?: number; desde?: string; hasta?: string; tarjeta?: string } = {}): Observable<{ datos: Servicio[]; total: number; suma: number }> {
     let httpParams = new HttpParams();
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.offset) httpParams = httpParams.set('offset', params.offset.toString());
     if (params.desde) httpParams = httpParams.set('desde', params.desde);
     if (params.hasta) httpParams = httpParams.set('hasta', params.hasta);
+    if (params.tarjeta !== undefined && params.tarjeta !== '') httpParams = httpParams.set('tarjeta', params.tarjeta);
     return this.http.get<{ datos: any[]; total: number; suma: number }>(this.baseUrl, { params: httpParams })
       .pipe(
         map(response => ({
@@ -25,7 +26,8 @@ export class ServiciosService {
             codigo: s.codigo,
             importe: s.importe,
             descuento: s.descuento,
-            importeFinal: s.importeFinal
+            importeFinal: s.importeFinal,
+            tarjeta: s.tarjeta === true || s.tarjeta === 1
           } as Servicio)),
           total: response.total,
           suma: response.suma

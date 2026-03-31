@@ -37,6 +37,14 @@
         <label class="form-label">Hasta</label>
         <input type="date" class="form-control" [(ngModel)]="hasta">
       </div>
+      <div class="col-12 col-md-auto">
+        <label class="form-label">Tarjeta</label>
+        <select class="form-select" [(ngModel)]="filtroTarjeta" (change)="aplicarFiltro()">
+          <option value="">Todos</option>
+          <option value="1">Solo con tarjeta</option>
+          <option value="0">Solo sin tarjeta</option>
+        </select>
+      </div>
       <div class="col-12 col-md-auto d-flex gap-2 flex-wrap">
         <button class="btn btn-outline-primary" (click)="setUltimoMes(); aplicarFiltro()">Últimos 30 días</button>
         <button class="btn btn-outline-primary" (click)="verTodo()">Ver todo</button>
@@ -85,6 +93,7 @@
                   <span class="d-none d-sm-inline">Descuento</span>
                 </th>
                 <th class="text-end">Total</th>
+                <th class="text-center">Tarjeta</th>
                 <th class="text-center">Acciones</th>
               </tr>
             </thead>
@@ -96,6 +105,9 @@
                 <td class="text-end">{{ s.importe | number:'1.2-2':'es' }}</td>
                 <td class="text-end">{{ s.descuento | number:'1.0-2':'es' }}%</td>
                 <td class="text-end">{{ s.importeFinal | number:'1.2-2':'es' }}</td>
+                <td class="text-center">
+                  <span *ngIf="s.tarjeta">✔️</span>
+                </td>
                 <td class="text-center">
                   <button class="btn btn-sm btn-info" (click)="abrirDetalle(s)">Ver</button>
                 </td>
@@ -114,6 +126,7 @@
               <p class="card-text mb-1"><strong>Importe:</strong> {{ s.importe | number:'1.2-2':'es' }} €</p>
               <p class="card-text mb-1"><strong>Descuento:</strong> {{ s.descuento | number:'1.0-2':'es' }}%</p>
               <p class="card-text mb-0"><strong>Final:</strong> {{ s.importeFinal | number:'1.2-2':'es' }} €</p>
+              <p class="card-text mb-0"><strong>Tarjeta:</strong> <span *ngIf="s.tarjeta">✔️</span><span *ngIf="!s.tarjeta">—</span></p>
             </div>
           </div>
         }
@@ -144,6 +157,7 @@
             <p><strong>Importe:</strong> {{ servicioSeleccionado.importe | number:'1.2-2':'es' }} €</p>
             <p><strong>Descuento:</strong> {{ servicioSeleccionado.descuento | number:'1.0-2':'es' }}%</p>
             <p><strong>Final:</strong> {{ servicioSeleccionado.importeFinal | number:'1.2-2':'es' }} €</p>
+            <p><strong>Tarjeta:</strong> <span *ngIf="servicioSeleccionado.tarjeta">✔️</span><span *ngIf="!servicioSeleccionado.tarjeta">—</span></p>
           </div>
           <div class="modal-footer">
             <button class="btn btn-primary" (click)="editarServicio(servicioSeleccionado)">Modificar</button>
@@ -186,6 +200,10 @@
               <div class="mb-3">
                 <label class="form-label">Importe final (€)</label>
                 <input type="number" class="form-control" name="importeFinal" [(ngModel)]="servicio.importeFinal" disabled>
+              </div>
+              <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="tarjetaCheck" name="tarjeta" [(ngModel)]="servicio.tarjeta">
+                <label class="form-check-label" for="tarjetaCheck">Pago con tarjeta</label>
               </div>
               <div class="d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-secondary" (click)="cerrarForm()">Cancelar</button>

@@ -39,7 +39,8 @@ if (DB_TYPE === 'postgres') {
         codigo TEXT NOT NULL,
         importe REAL NOT NULL,
         descuento REAL NOT NULL,
-        importeFinal REAL NOT NULL
+        importeFinal REAL NOT NULL,
+        tarjeta BOOLEAN NOT NULL DEFAULT FALSE
       );
       CREATE TABLE IF NOT EXISTS ingresos (
         id SERIAL PRIMARY KEY,
@@ -81,6 +82,13 @@ if (DB_TYPE === 'postgres') {
       CREATE INDEX IF NOT EXISTS idx_empresas_user_nombre ON empresas(userId, nombre);
     `);
     await pgPool.query('ALTER TABLE ingresos ADD COLUMN IF NOT EXISTS servicios REAL NOT NULL DEFAULT 0');
+    // Asegura que la columna tarjeta existe en servicios
+    await pgPool.query(`DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='servicios' AND column_name='tarjeta') THEN
+        ALTER TABLE servicios ADD COLUMN tarjeta BOOLEAN NOT NULL DEFAULT FALSE;
+      END IF;
+    END$$;`);
   })();
 } else {
   // --- SQLITE (local por defecto) ---
@@ -114,6 +122,7 @@ if (DB_TYPE === 'postgres') {
       importe REAL NOT NULL,
       descuento REAL NOT NULL,
       importeFinal REAL NOT NULL,
+      tarjeta INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (userId) REFERENCES users(id)
     );
     CREATE TABLE IF NOT EXISTS ingresos (
@@ -161,6 +170,11 @@ if (DB_TYPE === 'postgres') {
   const ingresosCols = db.prepare('PRAGMA table_info(ingresos)').all();
   if (!ingresosCols.some(c => c.name === 'servicios')) {
     db.exec('ALTER TABLE ingresos ADD COLUMN servicios REAL NOT NULL DEFAULT 0');
+    // Asegura que la columna tarjeta existe en servicios (SQLite) SIEMPRE
+    const cols = db.prepare("PRAGMA table_info(servicios)").all();
+    if (!cols.some(c => c.name === 'tarjeta')) {
+      db.exec('ALTER TABLE servicios ADD COLUMN tarjeta INTEGER NOT NULL DEFAULT 0');
+    }
   }
 }
 
@@ -476,13 +490,18 @@ app.get('/servicios', auth, async (req, res) => {
   try {
     const limit = Math.max(1, Number(req.query.limit) || 50);
     const offset = Math.max(0, Number(req.query.offset) || 0);
-    const { desde, hasta } = req.query;
+    const { desde, hasta, tarjeta } = req.query;
     if (DB_TYPE === 'postgres') {
       let where = 'userId = $1';
       const params = [req.user.sub];
       let idx = 2;
       if (desde) { where += ` AND fecha >= $${idx}`; params.push(desde); idx++; }
       if (hasta) { where += ` AND fecha <= $${idx}`; params.push(hasta); idx++; }
+      if (tarjeta === '1' || tarjeta === 'true' || tarjeta === '0' || tarjeta === 'false') {
+        where += ` AND tarjeta = $${idx}`;
+        params.push(tarjeta === '1' || tarjeta === 'true');
+        idx++;
+      }
       const total = (await pgPool.query(`SELECT COUNT(*) AS c FROM servicios WHERE ${where}`, params)).rows[0].c;
       const suma = (await pgPool.query(`SELECT COALESCE(SUM(importeFinal), 0) AS s FROM servicios WHERE ${where}`, params)).rows[0].s;
       const datos = (await pgPool.query(`SELECT * FROM servicios WHERE ${where} ORDER BY fecha DESC, id DESC LIMIT $${idx} OFFSET $${idx+1}`, [...params, limit, offset])).rows;
@@ -492,6 +511,10 @@ app.get('/servicios', auth, async (req, res) => {
       const params = [req.user.sub];
       if (desde) { where += ' AND date(substr(fecha,1,10)) >= date(?)'; params.push(desde); }
       if (hasta) { where += ' AND date(substr(fecha,1,10)) <= date(?)'; params.push(hasta); }
+      if (tarjeta === '1' || tarjeta === 'true' || tarjeta === '0' || tarjeta === 'false') {
+        where += ' AND tarjeta = ?';
+        params.push(tarjeta === '1' || tarjeta === 'true' ? 1 : 0);
+      }
       const total = db.prepare(`SELECT COUNT(*) AS c FROM servicios WHERE ${where}`).get(...params).c;
       const suma = db.prepare(`SELECT COALESCE(SUM(importeFinal), 0) AS s FROM servicios WHERE ${where}`).get(...params).s;
       const datos = db.prepare(`
@@ -508,16 +531,18 @@ app.get('/servicios', auth, async (req, res) => {
 
 app.post('/servicios', auth, async (req, res) => {
   try {
-    const { fecha, codigo, importe, descuento } = req.body || {};
+    const { fecha, codigo, importe, descuento, tarjeta } = req.body || {};
     if (!fecha || !codigo || importe == null || descuento == null) {
       return res.status(400).json({ error: 'Datos incompletos' });
     }
     const importeFinal = Number(importe) - Number(importe) * (Number(descuento) / 100);
+    const tarjetaValue = tarjeta === true || tarjeta === 1 ? true : false;
     if (DB_TYPE === 'postgres') {
-      const result = await pgPool.query(`INSERT INTO servicios (userId, fecha, codigo, importe, descuento, importeFinal) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, [req.user.sub, fecha, codigo, importe, descuento, importeFinal]);
+      const result = await pgPool.query(`INSERT INTO servicios (userId, fecha, codigo, importe, descuento, importeFinal, tarjeta) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`, [req.user.sub, fecha, codigo, importe, descuento, importeFinal, tarjetaValue]);
       res.status(201).json(result.rows[0]);
     } else {
-      const info = db.prepare(`INSERT INTO servicios (userId, fecha, codigo, importe, descuento, importeFinal) VALUES (?, ?, ?, ?, ?, ?)`).run(req.user.sub, fecha, codigo, importe, descuento, importeFinal);
+      const info = db.prepare(`INSERT INTO servicios (userId, fecha, codigo, importe, descuento, importeFinal, tarjeta) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+        .run(req.user.sub, fecha, codigo, importe, descuento, importeFinal, tarjetaValue ? 1 : 0);
       const inserted = db.prepare('SELECT * FROM servicios WHERE id = ?').get(info.lastInsertRowid);
       res.status(201).json(inserted);
     }
@@ -545,19 +570,20 @@ app.get('/servicios/:id', auth, async (req, res) => {
 
 app.put('/servicios/:id', auth, async (req, res) => {
   try {
-    const { fecha, codigo, importe, descuento } = req.body || {};
+    const { fecha, codigo, importe, descuento, tarjeta } = req.body || {};
     if (!fecha || !codigo || importe == null || descuento == null) {
       return res.status(400).json({ error: 'Datos incompletos' });
     }
     const importeFinal = Number(importe) - Number(importe) * (Number(descuento) / 100);
+    const tarjetaValue = tarjeta === true || tarjeta === 1 ? true : false;
     if (DB_TYPE === 'postgres') {
-      await pgPool.query(`UPDATE servicios SET fecha=$1, codigo=$2, importe=$3, descuento=$4, importeFinal=$5 WHERE id=$6 AND userId=$7`, [fecha, codigo, importe, descuento, importeFinal, req.params.id, req.user.sub]);
+      await pgPool.query(`UPDATE servicios SET fecha=$1, codigo=$2, importe=$3, descuento=$4, importeFinal=$5, tarjeta=$6 WHERE id=$7 AND userId=$8`, [fecha, codigo, importe, descuento, importeFinal, tarjetaValue, req.params.id, req.user.sub]);
       const result = await pgPool.query('SELECT * FROM servicios WHERE id = $1', [req.params.id]);
       res.json(result.rows[0]);
     } else {
       const servicio = db.prepare('SELECT * FROM servicios WHERE id = ? AND userId = ?').get(req.params.id, req.user.sub);
       if (!servicio) return res.status(404).json({ error: 'Servicio no encontrado' });
-      db.prepare(`UPDATE servicios SET fecha = ?, codigo = ?, importe = ?, descuento = ?, importeFinal = ? WHERE id = ? AND userId = ?`).run(fecha, codigo, importe, descuento, importeFinal, req.params.id, req.user.sub);
+      db.prepare(`UPDATE servicios SET fecha = ?, codigo = ?, importe = ?, descuento = ?, importeFinal = ?, tarjeta = ? WHERE id = ? AND userId = ?`).run(fecha, codigo, importe, descuento, importeFinal, tarjetaValue ? 1 : 0, req.params.id, req.user.sub);
       const updated = db.prepare('SELECT * FROM servicios WHERE id = ?').get(req.params.id);
       res.json(updated);
     }

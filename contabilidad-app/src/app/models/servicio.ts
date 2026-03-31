@@ -5,4 +5,5 @@ export interface Servicio {
   importe: number;
   descuento: number;
   importeFinal?: number;
+  tarjeta?: boolean;
 }

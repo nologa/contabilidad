@@ -1,3 +1,4 @@
+// ...existing code...
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./servicios.scss']
 })
 export class ServiciosListaComponent implements OnInit {
+  filtroTarjeta = '';
   limit = 50;
   page = 0;
   offset = 0;
@@ -72,7 +74,7 @@ export class ServiciosListaComponent implements OnInit {
   showSuccessModal = false;
   editingId: number | null = null;
   successMessage = '';
-  servicio: Servicio = { codigo: '', fecha: '', importe: 0, descuento: 0, importeFinal: 0 };
+  servicio: Servicio = { codigo: '', fecha: '', importe: 0, descuento: 0, importeFinal: 0, tarjeta: false };
 
   constructor(
     private serviciosService: ServiciosService,
@@ -122,8 +124,10 @@ export class ServiciosListaComponent implements OnInit {
   cargarServicios(): void {
     this.loading = true;
     this.error = '';
+    const params: any = { limit: this.limit, offset: this.offset, desde: this.desde || undefined, hasta: this.hasta || undefined };
+    if (this.filtroTarjeta !== '') params.tarjeta = this.filtroTarjeta;
     this.serviciosService
-      .list({ limit: this.limit, offset: this.offset, desde: this.desde || undefined, hasta: this.hasta || undefined })
+      .list(params)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
@@ -132,7 +136,6 @@ export class ServiciosListaComponent implements OnInit {
             ...s,
             importeFinal: Math.round(((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)) * 100) / 100
           }));
-          
           // Extraer años únicos de los datos
           const anosUnicos = new Set<number>();
           res.datos.forEach(s => {
@@ -140,7 +143,6 @@ export class ServiciosListaComponent implements OnInit {
             if (!isNaN(ano)) anosUnicos.add(ano);
           });
           this.anos = Array.from(anosUnicos).sort((a, b) => a - b);
-          
           this.ordenarServicios();
           this.total = res.total;
           this.suma = res.suma;
@@ -364,9 +366,14 @@ export class ServiciosListaComponent implements OnInit {
     } 
 
     console.log('Guardando con editingId:', this.editingId); // Debug
+    // Asegura que el valor de tarjeta es booleano puro
+    const servicioToSend = {
+      ...this.servicio,
+      tarjeta: !!this.servicio.tarjeta
+    };
     const op = this.editingId != null
-      ? this.serviciosService.update(this.editingId, this.servicio)
-      : this.serviciosService.create(this.servicio);
+      ? this.serviciosService.update(this.editingId, servicioToSend)
+      : this.serviciosService.create(servicioToSend);
 
     op.pipe(finalize(() => this.loading = false)).subscribe({
       next: () => {
@@ -435,7 +442,8 @@ export class ServiciosListaComponent implements OnInit {
       fecha: s.fecha,
       importe: s.importe ?? 0,
       descuento: s.descuento ?? 0,
-      importeFinal: s.importeFinal ?? ((s.importe ?? 0) - (s.descuento ?? 0))
+      importeFinal: s.importeFinal ?? ((s.importe ?? 0) - (s.descuento ?? 0)),
+      tarjeta: s.tarjeta ?? false
     };
     this.showFormModal = true;
     console.log('Editando servicio con ID:', this.editingId); // Debug
