@@ -39,7 +39,7 @@ if (DB_TYPE === 'postgres') {
         codigo TEXT NOT NULL,
         importe REAL NOT NULL,
         descuento REAL NOT NULL,
-        importeFinal REAL NOT NULL,
+        importeFinal REAL NOT NULL
       );
       CREATE TABLE IF NOT EXISTS ingresos (
         id SERIAL PRIMARY KEY,
