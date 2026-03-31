@@ -13,6 +13,7 @@ if (DB_TYPE === 'postgres') {
   const { Pool } = require('pg');
   pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
   // Las tablas se crearán si no existen (solo la primera vez)
+  
   (async () => {
     await pgPool.query(`
       CREATE TABLE IF NOT EXISTS users (
