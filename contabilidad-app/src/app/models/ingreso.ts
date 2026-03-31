@@ -4,5 +4,6 @@ export interface Ingreso {
   x: number;
   y: number;
   servicios: number;
+  tarjeta: number;
   total?: number;
 }

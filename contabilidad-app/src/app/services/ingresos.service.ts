@@ -9,13 +9,13 @@ export class IngresosService {
 
   constructor(private http: HttpClient) {}
 
-  list(params: { limit?: number; offset?: number; desde?: string; hasta?: string } = {}): Observable<{ datos: Ingreso[]; total: number; suma: number }> {
+  list(params: { limit?: number; offset?: number; desde?: string; hasta?: string } = {}): Observable<{ datos: Ingreso[]; total: number; suma: number; totalTarjeta: number }> {
     let httpParams = new HttpParams();
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.offset) httpParams = httpParams.set('offset', params.offset.toString());
     if (params.desde) httpParams = httpParams.set('desde', params.desde);
     if (params.hasta) httpParams = httpParams.set('hasta', params.hasta);
-    return this.http.get<{ datos: Ingreso[]; total: number; suma: number }>(this.baseUrl, { params: httpParams });
+    return this.http.get<{ datos: Ingreso[]; total: number; suma: number; totalTarjeta: number }>(this.baseUrl, { params: httpParams });
   }
 
   create(ingreso: Ingreso): Observable<Ingreso> {

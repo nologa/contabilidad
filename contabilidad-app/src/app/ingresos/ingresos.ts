@@ -73,8 +73,9 @@ export class IngresosComponent implements OnInit {
   vistaTabla = true;
   totalServicios = 0;
   totalServiciosEuros = 0;
+  totalTarjeta = 0;
   ingresos: Ingreso[] = [];
-  ingreso: Ingreso = { fecha: '', x: 0, y: 0, servicios: 0 };
+  ingreso: Ingreso = { fecha: '', x: 0, y: 0, servicios: 0, tarjeta: 0 };
   showFormModal = false;
   editingId: number | null = null;
   loading = false;
@@ -238,6 +239,7 @@ export class IngresosComponent implements OnInit {
         this.ingresos = lista;
         this.totalServicios = lista.reduce((acc, i) => acc + (i.servicios || 0), 0);
         this.totalServiciosEuros = lista.reduce((acc, i) => acc + (i.total || 0), 0);
+        this.totalTarjeta = res.totalTarjeta ?? lista.reduce((acc, i) => acc + (i.tarjeta || 0), 0);
         this.loading = false;
         this.cd.detectChanges();
       },
@@ -291,7 +293,7 @@ export class IngresosComponent implements OnInit {
 
   abrirNueva(): void {
     this.editingId = null;
-    this.ingreso = { fecha: '', x: 0, y: 0, servicios: 0 };
+    this.ingreso = { fecha: '', x: 0, y: 0, servicios: 0, tarjeta: 0 };
     this.showFormModal = true;
   }
 

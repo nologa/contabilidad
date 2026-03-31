@@ -22,7 +22,48 @@ import { ChangeDetectorRef } from '@angular/core';
   styleUrls: ['./servicios.scss']
 })
 export class ServiciosListaComponent implements OnInit {
-  filtroTarjeta = '';
+    seleccionados: { [id: number]: boolean } = {};
+    borradoLotePendiente = false;
+    todosSeleccionados(): boolean {
+      return this.servicios.length > 0 && this.servicios.every(s => this.seleccionados[s.id!]);
+    }
+
+    toggleSeleccionarTodos(event: any): void {
+      const checked = event.target.checked;
+      this.servicios.forEach(s => {
+        if (s.id != null) this.seleccionados[s.id] = checked;
+      });
+    }
+
+    seleccionadosIds(): number[] {
+      return this.servicios.filter(s => s.id && this.seleccionados[s.id]).map(s => s.id!)
+    }
+
+    confirmarBorradoLote(): void {
+      const ids = this.seleccionadosIds();
+      if (ids.length === 0) return;
+      if (confirm(`¿Seguro que quieres borrar estos ${ids.length} registros?`)) {
+        this.borrarLote(ids);
+      }
+    }
+
+    borrarLote(ids: number[]): void {
+      // Borra en serie, puedes optimizar a petición en lote si el backend lo soporta
+      let pendientes = ids.length;
+      ids.forEach(id => {
+        this.serviciosService.delete(id).subscribe({
+          next: () => {
+            pendientes--;
+            delete this.seleccionados[id];
+            if (pendientes === 0) this.cargarServicios();
+          },
+          error: () => {
+            pendientes--;
+            if (pendientes === 0) this.cargarServicios();
+          }
+        });
+      });
+    }
   limit = 50;
   page = 0;
   offset = 0;
@@ -74,7 +115,7 @@ export class ServiciosListaComponent implements OnInit {
   showSuccessModal = false;
   editingId: number | null = null;
   successMessage = '';
-  servicio: Servicio = { codigo: '', fecha: '', importe: 0, descuento: 0, importeFinal: 0, tarjeta: false };
+  servicio: Servicio = { codigo: '', fecha: '', importe: 0, descuento: 0, importeFinal: 0 };
 
   constructor(
     private serviciosService: ServiciosService,
@@ -125,7 +166,6 @@ export class ServiciosListaComponent implements OnInit {
     this.loading = true;
     this.error = '';
     const params: any = { limit: this.limit, offset: this.offset, desde: this.desde || undefined, hasta: this.hasta || undefined };
-    if (this.filtroTarjeta !== '') params.tarjeta = this.filtroTarjeta;
     this.serviciosService
       .list(params)
       .pipe(finalize(() => (this.loading = false)))
@@ -270,15 +310,14 @@ export class ServiciosListaComponent implements OnInit {
         : 'Rango: todas las fechas';
     doc.text(rango, margin.left, 58);
 
-    const head = [['Nº', 'Código', 'Fecha', 'Importe €', 'Descuento', 'Final €', 'Tarjeta']];
+    const head = [['Nº', 'Código', 'Fecha', 'Importe €', 'Descuento', 'Final €']];
     const body = this.servicios.map((s, i) => [
       (i + 1).toString(),
       s.codigo,
       s.fecha,
       this.fmt(s.importe ?? 0),
       `${s.descuento ?? 0}`,
-      this.fmt(s.importeFinal ?? ((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100))),
-      s.tarjeta ? '✔️' : ''
+      this.fmt(s.importeFinal ?? ((s.importe ?? 0) - ((s.importe ?? 0) * (s.descuento ?? 0) / 100)))
     ]);
 
     const pageTotals: Record<number, number> = {};
@@ -367,10 +406,8 @@ export class ServiciosListaComponent implements OnInit {
     } 
 
     console.log('Guardando con editingId:', this.editingId); // Debug
-    // Asegura que el valor de tarjeta es booleano puro
     const servicioToSend = {
-      ...this.servicio,
-      tarjeta: !!this.servicio.tarjeta
+      ...this.servicio
     };
     const op = this.editingId != null
       ? this.serviciosService.update(this.editingId, servicioToSend)
@@ -444,7 +481,6 @@ export class ServiciosListaComponent implements OnInit {
       importe: s.importe ?? 0,
       descuento: s.descuento ?? 0,
       importeFinal: s.importeFinal ?? ((s.importe ?? 0) - (s.descuento ?? 0)),
-      tarjeta: s.tarjeta ?? false
     };
     this.showFormModal = true;
     console.log('Editando servicio con ID:', this.editingId); // Debug

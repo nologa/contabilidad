@@ -46,6 +46,7 @@
     <div class="summary-top">
       <span class="summary-pill">Nº de servicios: {{ totalServicios | number:'1.0-0':'es' }}</span>
       <span class="summary-pill">Total servicios: {{ totalServiciosEuros | number:'1.2-2':'es' }} €</span>
+      <span class="summary-pill">Total tarjeta: {{ totalTarjeta | number:'1.2-2':'es' }} €</span>
     </div>
 
     @if (vistaTabla) {
@@ -58,6 +59,7 @@
               <th class="text-end">X</th>
               <th class="text-end">Y</th>
               <th class="text-end">Servicios</th>
+              <th class="text-end">Tarjeta</th>
               <th class="text-end">Total</th>
               <th class="text-center"></th>
             </tr>
@@ -69,6 +71,7 @@
               <td class="text-end">{{ i.x | number:'1.2-2':'es' }}</td>
               <td class="text-end">{{ i.y | number:'1.2-2':'es' }}</td>
               <td class="text-end">{{ i.servicios | number:'1.0-0':'es' }}</td>
+              <td class="text-end">{{ i.tarjeta | number:'1.2-2':'es' }}</td>
               <td class="text-end">{{ (i.y - i.x) | number:'1.2-2':'es' }}</td>
               <td class="text-center">
                 <button class="btn btn-sm btn-info" (click)="abrirDetalle(i)">Ver</button>
@@ -86,6 +89,7 @@
               <p class="card-text mb-1"><strong>X:</strong> {{ i.x | number:'1.2-2':'es' }} €</p>
               <p class="card-text mb-1"><strong>Y:</strong> {{ i.y | number:'1.2-2':'es' }} €</p>
               <p class="card-text mb-1"><strong>Servicios:</strong> {{ i.servicios | number:'1.0-0':'es' }}</p>
+              <p class="card-text mb-1"><strong>Tarjeta:</strong> {{ i.tarjeta | number:'1.2-2':'es' }} €</p>
               <p class="card-text mb-0"><strong>Total:</strong> {{ (i.y - i.x) | number:'1.2-2':'es' }} €</p>
               <button class="btn btn-sm btn-info mt-2" (click)="abrirDetalle(i)">Ver</button>
             </div>
@@ -125,6 +129,11 @@
                 <label class="form-label">Servicios *</label>
                 <input type="number" class="form-control" [(ngModel)]="ingreso.servicios" name="servicios" required step="1" min="0">
                 <small class="text-danger" *ngIf="(ingreso.servicios || 0) < 0">Servicios debe ser mayor o igual a 0</small>
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Tarjeta (€) *</label>
+                <input type="number" class="form-control" [(ngModel)]="ingreso.tarjeta" name="tarjeta" required step="0.01" min="0">
+                <small class="text-danger" *ngIf="(ingreso.tarjeta || 0) < 0">Tarjeta debe ser mayor o igual a 0</small>
               </div>
               <div class="mb-2">
                 <label class="form-label">Total</label>
