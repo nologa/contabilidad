@@ -91,19 +91,22 @@ export class IngresosComponent implements OnInit {
     const fmtInt = (n: number) => Math.round(n).toLocaleString('es-ES', { maximumFractionDigits: 0 });
     const parseEuro = (s: string) => Number(String(s).replace(/\./g, '').replace(',', '.')) || 0;
     const parseIntEs = (s: string) => Number(String(s).replace(/\./g, '')) || 0;
-    const head = [['Nº', 'Fecha', 'X', 'Y', 'Servicios', 'Total']];
+    const head = [['Nº', 'Fecha', 'X', 'Y', 'Servicios', 'Tarjeta', 'Total']];
     const body = this.ingresos.map((i, idx) => [
       (idx + 1).toString(),
       i.fecha ?? '',
       fmtEuro(Number(i.x ?? 0)),
       fmtEuro(Number(i.y ?? 0)),
       fmtInt(Number(i.servicios ?? 0)),
+      fmtEuro(Number(i.tarjeta ?? 0)),
       fmtEuro(Number(i.y ?? 0) - Number(i.x ?? 0))
     ]);
     const pageTotalsServicios: Record<number, number> = {};
     const cumTotalsServicios: Record<number, number> = {};
     const pageTotalsEuros: Record<number, number> = {};
     const cumTotalsEuros: Record<number, number> = {};
+    const pageTotalsTarjeta: Record<number, number> = {};
+    const cumTotalsTarjeta: Record<number, number> = {};
 
     autoTable(doc, {
       head,
@@ -112,10 +115,11 @@ export class IngresosComponent implements OnInit {
       margin,
       styles: { fontSize: 10, textColor: [0, 0, 0] },
       headStyles: { fillColor: [110, 193, 255], textColor: [0, 0, 0] },
-      columnStyles: { 0: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } },
+      columnStyles: { 0: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' }, 6: { halign: 'right' } },
       showFoot: 'everyPage',
       foot: [[
         { content: '', colSpan: 4, styles: { halign: 'left' } },
+        { content: '', colSpan: 1, styles: { halign: 'right' } },
         { content: '', colSpan: 2, styles: { halign: 'right' } }
       ]],
       footStyles: { fillColor: [240, 240, 240] },
@@ -153,12 +157,21 @@ export class IngresosComponent implements OnInit {
         if (data.section === 'body' && data.column.index === 5) {
           const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
           const val = parseEuro(txt);
+          pageTotalsTarjeta[p] = (pageTotalsTarjeta[p] || 0) + val;
+        }
+        if (data.section === 'body' && data.column.index === 6) {
+          const txt = Array.isArray(data.cell.text) ? data.cell.text.join(' ') : String(data.cell.text || '');
+          const val = parseEuro(txt);
           pageTotalsEuros[p] = (pageTotalsEuros[p] || 0) + val;
         }
         if (data.section === 'foot') {
           const prevServicios = p > 1 ? (cumTotalsServicios[p - 1] || 0) : 0;
           const pageTotalServicios = pageTotalsServicios[p] || 0;
           cumTotalsServicios[p] = prevServicios + pageTotalServicios;
+
+          const prevTarjeta = p > 1 ? (cumTotalsTarjeta[p - 1] || 0) : 0;
+          const pageTotalTarjeta = pageTotalsTarjeta[p] || 0;
+          cumTotalsTarjeta[p] = prevTarjeta + pageTotalTarjeta;
 
           const prevEuros = p > 1 ? (cumTotalsEuros[p - 1] || 0) : 0;
           const pageTotalEuros = pageTotalsEuros[p] || 0;
@@ -168,19 +181,26 @@ export class IngresosComponent implements OnInit {
           doc.setFontSize(10);
           doc.setTextColor(0, 0, 0);
           if (data.column.index === 0) {
-            const y1 = cell.y + cell.height / 2 - 5;
-            const y2 = cell.y + cell.height / 2 + 8;
+            const y1 = cell.y + cell.height / 2 - 10;
+            const y2 = cell.y + cell.height / 2 + 2;
+            const y3 = cell.y + cell.height / 2 + 14;
             doc.text(`Servicios página: ${fmtInt(pageTotalServicios)}`, cell.x + 6, y1, { baseline: 'middle' });
-            doc.text(`Total página: ${fmtEuro(pageTotalEuros)} €`, cell.x + 6, y2, { baseline: 'middle' });
+            doc.text(`Tarjeta página: ${fmtEuro(pageTotalTarjeta)} €`, cell.x + 6, y2, { baseline: 'middle' });
+            doc.text(`Total página: ${fmtEuro(pageTotalEuros)} €`, cell.x + 6, y3, { baseline: 'middle' });
           }
           if (data.column.index === 4) {
-            const y1 = cell.y + cell.height / 2 - 5;
-            const y2 = cell.y + cell.height / 2 + 8;
+            const y1 = cell.y + cell.height / 2 - 10;
+            const y2 = cell.y + cell.height / 2 + 2;
+            const y3 = cell.y + cell.height / 2 + 14;
             doc.text(`Servicios acumulado: ${fmtInt(cumTotalsServicios[p])}`, cell.x + cell.width - 6, y1, {
               baseline: 'middle',
               align: 'right'
             });
-            doc.text(`Acumulado: ${fmtEuro(cumTotalsEuros[p])} €`, cell.x + cell.width - 6, y2, {
+            doc.text(`Tarjeta acumulado: ${fmtEuro(cumTotalsTarjeta[p])} €`, cell.x + cell.width - 6, y2, {
+              baseline: 'middle',
+              align: 'right'
+            });
+            doc.text(`Acumulado: ${fmtEuro(cumTotalsEuros[p])} €`, cell.x + cell.width - 6, y3, {
               baseline: 'middle',
               align: 'right'
             });
